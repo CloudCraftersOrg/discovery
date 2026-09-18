@@ -7,7 +7,7 @@ Values: `todo`, `in_progress`, `blocked`, `review`, `done`. Agents update their 
 | P1-01 | Repository scaffold, identities and guardrails | done | Applied 2026-09-18. dp-deployer deferred to platform work (ADR-045). |
 | P1-02 | Answer key | done | 57 items, validate.py passes. kind enum extended with "quality" to match the table (P1-02's field list omitted it) — see PR. |
 | P1-03 | Account telemetry baseline | done | Applied 2026-09-18, verified live (Config both regions, CloudTrail, CUR2, Compute Optimizer, Cost Optimization Hub). Cost allocation tags skipped — management-account-only, see tasks/HANDOFF-P1-03.md. |
-| P1-04 | Estate networking | blocked | Terraform written + validated (ADR-044 single VPC). Same blocker as P1-03: aws-access#39. |
+| P1-04 | Estate networking | done | Applied 2026-09-18: condor-vpc vpc-06f069857cd5a3612. Verified live: promo route table has no 0.0.0.0/0 route, flow logs ACTIVE. 0 warnings/errors on apply, unlike P1-03. |
 | P1-05 | Estate application source repositories | done | 5 repos pushed to CloudCraftersOrg (private). Branch protection on condor-pagos skipped — needs GitHub Pro/Team for a private repo. |
 | P1-06 | Tienda | todo | |
 | P1-07 | Pagos | todo | |
