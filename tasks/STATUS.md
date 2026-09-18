@@ -4,9 +4,9 @@ Values: `todo`, `in_progress`, `blocked`, `review`, `done`. Agents update their 
 
 | Task | Title | Status | Note |
 |---|---|---|---|
-| P1-01 | Repository scaffold, identities and guardrails | todo | |
+| P1-01 | Repository scaffold, identities and guardrails | done | Applied 2026-09-18. dp-deployer deferred to platform work (ADR-045). |
 | P1-02 | Answer key | todo | |
-| P1-03 | Account telemetry baseline | todo | |
+| P1-03 | Account telemetry baseline | blocked | Terraform written + validated. Blocked on aws-access#39 (sts:AssumeRole for condor-bootstrap) — see tasks/BLOCKED-P1-03.md. |
 | P1-04 | Estate networking | todo | |
 | P1-05 | Estate application source repositories | todo | |
 | P1-06 | Tienda | todo | |
