@@ -1,4 +1,18 @@
-# HANDOFF-P1-03 · Amazon Quick subscription
+# HANDOFF-P1-03
+
+## Cost allocation tag activation — management-account-only
+
+`terraform apply` failed on `aws_ce_cost_allocation_tag.app`/`.managed_by` with `AccessDeniedException: Linked account doesn't have access to cost allocation tags`. This account (`337058058699`) is a member account of the CloudCraftersOrg organization; cost allocation tag activation is only callable from the management account (`905081188087`, `santiacmaestre-cloudlab`), regardless of what IAM permissions the caller holds in the member account. `CLAUDE.md`'s own stop condition covers this exactly — not worked around, removed from `cost.tf`.
+
+**Steps, for whoever holds access to the management account:**
+
+1. Sign in to `905081188087` (or use a permission set that reaches it — `AIGovernanceAdminAccess` includes Organizations read/write but not `ce:*`; check before assuming it covers this).
+2. Cost allocation tags are managed from the *linked* account's own Billing console even when activated by the management account — the actual toggle is: Billing and Cost Management → Cost allocation tags, filtered to account `337058058699`, activate `app` and `managed-by`.
+3. Alternatively, `aws ce update-cost-allocation-tags-status --cost-allocation-tags-status TagKey=app,Status=Active TagKey=managed-by,Status=Active` from a management-account session with `ce:UpdateCostAllocationTagsStatus` — confirm whether this needs to run scoped to the linked account or account-wide; the CLI docs weren't conclusive from here.
+
+Until this happens, `AK-GRP-10`'s `managed-by` tag-based grouping evidence still works (Config/tagging collectors read the tag value directly, independent of cost-allocation-tag activation) — only CUR-based cost attribution by these two tags is blocked.
+
+## Amazon Quick subscription
 
 Not created by Terraform — Quick account subscriptions are a one-time,
 per-account console action with no clean `terraform destroy` path, which

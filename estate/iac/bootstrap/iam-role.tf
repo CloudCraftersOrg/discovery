@@ -38,6 +38,10 @@ data "aws_iam_policy_document" "condor_bootstrap_access" {
       "compute-optimizer:*",
       "config:*",
       "cost-optimization-hub:*",
+      # BCM Data Exports still calls the legacy CUR API under the hood for
+      # CreateExport (cur:PutReportDefinition) - discovered as a real
+      # AccessDenied on the first real apply, not predicted from docs.
+      "cur:*",
     ]
     resources = ["*"]
   }

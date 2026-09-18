@@ -47,7 +47,44 @@ resource "aws_bcmdataexports_export" "condor_cur2" {
     name = "condor-cur2"
 
     data_query {
-      query_statement = "SELECT * FROM COST_AND_USAGE_REPORT"
+      # SELECT * is rejected (ValidationException on a real apply) - BCM Data
+      # Exports requires an explicit column list. This one, not the full
+      # 125-column dictionary: enough for cost attribution and grouping
+      # (AK-GRP-10's managed-by tag, AK-BC-01's CUR reconciliation).
+      query_statement = <<-SQL
+        SELECT
+          bill_bill_type,
+          bill_billing_entity,
+          bill_billing_period_end_date,
+          bill_billing_period_start_date,
+          bill_payer_account_id,
+          bill_payer_account_name,
+          identity_line_item_id,
+          identity_time_interval,
+          line_item_availability_zone,
+          line_item_currency_code,
+          line_item_legal_entity,
+          line_item_line_item_description,
+          line_item_line_item_type,
+          line_item_net_unblended_cost,
+          line_item_operation,
+          line_item_product_code,
+          line_item_resource_id,
+          line_item_unblended_cost,
+          line_item_unblended_rate,
+          line_item_usage_account_id,
+          line_item_usage_account_name,
+          line_item_usage_amount,
+          line_item_usage_end_date,
+          line_item_usage_start_date,
+          line_item_usage_type,
+          pricing_currency,
+          product_product_family,
+          product_region_code,
+          product_servicecode,
+          resource_tags
+        FROM COST_AND_USAGE_REPORT
+      SQL
 
       table_configurations = {
         COST_AND_USAGE_REPORT = {
@@ -55,6 +92,10 @@ resource "aws_bcmdataexports_export" "condor_cur2" {
           INCLUDE_RESOURCES                     = "TRUE"
           INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY = "FALSE"
           INCLUDE_SPLIT_COST_ALLOCATION_DATA    = "FALSE"
+          # AWS auto-populates this to the account's primary billing view and
+          # returns it on every read; leaving it unset here makes every
+          # subsequent plan want to destroy and recreate the export.
+          BILLING_VIEW_ARN = "arn:aws:billing::${var.condor_account_id}:billingview/primary"
         }
       }
     }
@@ -82,15 +123,11 @@ resource "aws_bcmdataexports_export" "condor_cur2" {
   depends_on = [aws_s3_bucket_policy.condor_cur]
 }
 
-resource "aws_ce_cost_allocation_tag" "app" {
-  tag_key = "app"
-  status  = "Active"
-}
-
-resource "aws_ce_cost_allocation_tag" "managed_by" {
-  tag_key = "managed-by"
-  status  = "Active"
-}
+# Cost allocation tag activation is a management-account-only operation
+# (AccessDeniedException: "Linked account doesn't have access to cost
+# allocation tags", confirmed on a real apply, 337058058699 is a member
+# account) - CLAUDE.md's own stop condition for this exact case. See
+# tasks/HANDOFF-P1-03.md.
 
 resource "aws_costoptimizationhub_enrollment_status" "condor" {
   include_member_accounts = false
