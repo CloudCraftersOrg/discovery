@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://condor.internal/schemas/raw-envelope.json",
+  "title": "Raw record envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "envelope_version",
+    "run_id",
+    "collector",
+    "collector_version",
+    "domain",
+    "account_id",
+    "region",
+    "observed_at",
+    "resource_type",
+    "resource_id",
+    "record_kind",
+    "payload",
+    "payload_sha256"
+  ],
+  "properties": {
+    "envelope_version": { "const": "1" },
+    "run_id": { "type": "string" },
+    "collector": { "type": "string" },
+    "collector_version": { "type": "string" },
+    "domain": { "type": "string", "enum": ["infra", "apps", "pipelines"] },
+    "account_id": { "type": "string", "pattern": "^[0-9]{12}$" },
+    "region": { "type": "string" },
+    "observed_at": { "type": "string", "format": "date-time" },
+    "resource_type": { "type": "string" },
+    "resource_id": { "type": "string" },
+    "record_kind": {
+      "type": "string",
+      "enum": ["resource", "relation", "event", "metric", "coverage"]
+    },
+    "payload": { "type": "object" },
+    "payload_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "record_kind": { "const": "coverage" } },
+        "required": ["record_kind"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "required": ["reason"],
+            "properties": {
+              "reason": {
+                "type": "string",
+                "enum": ["access_denied", "not_found", "unreachable", "throttled", "unsupported"]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

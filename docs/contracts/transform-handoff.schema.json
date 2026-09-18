@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://condor.internal/schemas/transform-handoff.json",
+  "title": "AWS Transform handoff package",
+  "description": "Placeholder structure (P2-05) - finalised in P5-05 once the AWS Transform offering team confirms the real handoff schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["applications", "business_case", "modernization_candidates", "evidence_index"],
+  "properties": {
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "entity_id", "tech_stack"],
+        "properties": {
+          "name": { "type": "string" },
+          "entity_id": { "type": "string", "format": "uuid" },
+          "tech_stack": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "business_case": {
+      "type": "object",
+      "required": ["baseline_usd", "target_run_rate_usd", "lines"],
+      "properties": {
+        "baseline_usd": { "type": "number" },
+        "target_run_rate_usd": { "type": "number" },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["description", "value_usd", "band", "realization_lag_days"],
+            "properties": {
+              "description": { "type": "string" },
+              "value_usd": { "type": "number" },
+              "band": {
+                "type": "object",
+                "required": ["low", "expected", "high", "assumption"],
+                "properties": {
+                  "low": { "type": "number" },
+                  "expected": { "type": "number" },
+                  "high": { "type": "number" },
+                  "assumption": { "type": "string" }
+                }
+              },
+              "realization_lag_days": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "modernization_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["application", "evidence_links"],
+        "properties": {
+          "application": { "type": "string" },
+          "evidence_links": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "evidence_index": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "description": "answer-key ID -> list of evidence URIs, so every claim in the package traces back to raw records."
+    }
+  }
+}

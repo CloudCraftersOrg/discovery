@@ -22,9 +22,9 @@ Values: `todo`, `in_progress`, `blocked`, `review`, `done`. Agents update their 
 | P1-16 | Data readiness gate | todo | |
 | P2-01 | Platform network and storage base | todo | |
 | P2-02 | Controlled egress | todo | |
-| P2-03 | Private path to the estate | todo | |
+| P2-03 | Private path to the estate | todo | Rewritten for ADR-044 (no peering/Resolver) while doing P2-05 — not yet built. |
 | P2-04 | Collector identities | todo | |
-| P2-05 | Contracts and canonical model | todo | |
+| P2-05 | Contracts and canonical model | done | All schemas validate (2020-12); 0001_init.sql applied + pytest passed against real Postgres 16; check_registry.py passes. ADR-041 rewritten for ADR-044, P2-03/P2-07/P3-04 updated to match. |
 | P2-06 | AWS-provided analytics services | todo | |
 | P2-07 | Collector framework | todo | |
 | P2-08 | Infra collectors: inventory and IaC | todo | |
