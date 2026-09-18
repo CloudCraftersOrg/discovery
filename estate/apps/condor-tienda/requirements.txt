@@ -1,0 +1,7 @@
+flask==3.0.3
+gunicorn==22.0.0
+psycopg2-binary==2.9.9
+# PLANTED: AK-APP-01 — CVE-2023-32681 (GHSA-j8r2-6x86-q33q), fixed in 2.31.0.
+# Not reachable here: checkout's only outbound call is a plain internal HTTP
+# request to pagos.condor.internal, no proxy involved.
+requests==2.30.0

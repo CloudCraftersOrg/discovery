@@ -1,0 +1,13 @@
+[Unit]
+Description=Condor Reportes
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/condor-reportes
+ExecStart=/usr/bin/java -jar /opt/condor-reportes/condor-reportes.jar
+Restart=on-failure
+User=condor-reportes
+
+[Install]
+WantedBy=multi-user.target

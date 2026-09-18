@@ -8,7 +8,7 @@ Values: `todo`, `in_progress`, `blocked`, `review`, `done`. Agents update their 
 | P1-02 | Answer key | todo | |
 | P1-03 | Account telemetry baseline | blocked | Terraform written + validated. Blocked on aws-access#39 (sts:AssumeRole for condor-bootstrap) — see tasks/BLOCKED-P1-03.md. |
 | P1-04 | Estate networking | blocked | Terraform written + validated (ADR-044 single VPC). Same blocker as P1-03: aws-access#39. |
-| P1-05 | Estate application source repositories | todo | |
+| P1-05 | Estate application source repositories | done | 5 repos pushed to CloudCraftersOrg (private). Branch protection on condor-pagos skipped — needs GitHub Pro/Team for a private repo. |
 | P1-06 | Tienda | todo | |
 | P1-07 | Pagos | todo | |
 | P1-08 | Inventario (clickops) | todo | |

@@ -1,0 +1,21 @@
+{
+  "name": "condor-pagos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mercado Cóndor payments service",
+  "main": "app.js",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mysql2": "^3.11.4"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  }
+}
