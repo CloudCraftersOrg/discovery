@@ -4,19 +4,16 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh 'mvn -B -DskipTests package'
-            }
-        }
-        stage('Test') {
-            steps {
-                sh 'mvn -B test'
+                sh 'mvn -B package'
             }
         }
         stage('Deploy') {
             steps {
                 sh '''
-                    sudo cp target/condor-reportes.jar /opt/condor-reportes/condor-reportes.jar
-                    sudo systemctl restart condor-reportes
+                    aws deploy create-deployment \
+                        --application-name condor-reportes \
+                        --deployment-group-name condor-reportes-prod \
+                        --s3-location bucket=condor-reportes-artifacts-${AWS_ACCOUNT_ID},key=${BUILD_TAG}.zip,bundleType=zip
                 '''
             }
         }
