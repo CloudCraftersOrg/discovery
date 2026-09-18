@@ -1,0 +1,379 @@
+# The registry of every collector name used in answer-key.yaml (P2-05).
+# evidence_for is computed from the answer key, not hand-maintained - see
+# the generator this was authored with. Re-derive rather than hand-edit if
+# the answer key changes.
+collectors:
+  all regional collectors:
+    domain: infra
+    resource_types:
+    - '*'
+    cadence: on_delivery
+    regional: true
+    evidence_for:
+    - AK-COV-01
+    note: 'Not a single collector: every regional collector''s coverage record, collectively, is this
+      item''s evidence.'
+  asg:
+    domain: infra
+    resource_types:
+    - AWS::AutoScaling::AutoScalingGroup
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-GRP-05
+  backup:
+    domain: infra
+    resource_types:
+    - AWS::Backup::BackupPlan
+    - AWS::Backup::BackupVault
+    cadence: daily
+    regional: true
+    evidence_for:
+    - AK-INF-06
+  cloudformation:
+    domain: infra
+    resource_types:
+    - AWS::CloudFormation::Stack
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-GRP-01
+    - AK-INF-10
+    - AK-PIP-08
+  cloudtrail:
+    domain: infra
+    resource_types:
+    - AWS::CloudTrail::Trail
+    cadence: hourly
+    regional: false
+    evidence_for:
+    - AK-DEC-01
+    - AK-DEP-03
+    - AK-INF-08
+    - AK-PIP-01
+    - AK-PIP-02
+    - AK-PIP-03
+  cloudwatch:
+    domain: infra
+    resource_types:
+    - AWS::CloudWatch::Alarm
+    - AWS::CloudWatch::Metric
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-DEC-01
+  cloudwatch_alarms:
+    domain: apps
+    resource_types:
+    - AWS::CloudWatch::Alarm
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-APP-04
+  codepipeline:
+    domain: pipelines
+    resource_types:
+    - AWS::CodePipeline::Pipeline
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-PIP-01
+    - AK-PIP-08
+    - AK-PIP-12
+  compute_optimizer:
+    domain: infra
+    resource_types:
+    - AWS::ComputeOptimizer::Recommendation
+    cadence: daily
+    regional: false
+    evidence_for:
+    - AK-INF-01
+  config:
+    domain: infra
+    resource_types:
+    - '*'
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-COV-02
+    - AK-COV-04
+    - AK-DEC-01
+    - AK-GRP-07
+    - AK-GRP-08
+    - AK-GRP-09
+    - AK-INF-07
+    - AK-INF-10
+  cost_optimization_hub:
+    domain: infra
+    resource_types:
+    - AWS::CostOptimizationHub::Recommendation
+    cadence: daily
+    regional: false
+    evidence_for:
+    - AK-INF-01
+    - AK-INF-02
+    - AK-INF-07
+  cur:
+    domain: infra
+    resource_types:
+    - AWS::CUR::Export
+    cadence: daily
+    regional: false
+    evidence_for:
+    - AK-BC-01
+    - AK-COV-03
+    - AK-DEC-01
+    - AK-INF-02
+  derived:
+    domain: infra
+    resource_types: []
+    cadence: on_delivery
+    regional: false
+    evidence_for:
+    - AK-BC-02
+    - AK-BC-03
+    - AK-BC-04
+    - AK-BC-05
+    - AK-GRP-11
+    - AK-PIP-11
+    - AK-QLT-01
+    - AK-QLT-02
+    note: 'Not a collector: output of processing (P4-xx), computed from canonical tables, not read from
+      AWS.'
+  ebs:
+    domain: infra
+    resource_types:
+    - AWS::EC2::Volume
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-INF-06
+  ecr:
+    domain: pipelines
+    resource_types:
+    - AWS::ECR::Repository
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-PIP-02
+    - AK-PIP-09
+  ecs:
+    domain: apps
+    resource_types:
+    - AWS::ECS::Service
+    - AWS::ECS::TaskDefinition
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-APP-02
+    - AK-APP-03
+    - AK-APP-05
+    - AK-GRP-03
+    - AK-PIP-09
+  eks:
+    domain: infra
+    resource_types:
+    - AWS::EKS::Cluster
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-INF-03
+  elb:
+    domain: infra
+    resource_types:
+    - AWS::ElasticLoadBalancingV2::LoadBalancer
+    - AWS::ElasticLoadBalancingV2::TargetGroup
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-APP-06
+    - AK-DEP-01
+    - AK-GRP-05
+  flowlogs:
+    domain: infra
+    resource_types:
+    - AWS::EC2::FlowLog
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-APP-02
+    - AK-DEC-01
+    - AK-DEP-01
+    - AK-DEP-02
+    - AK-GRP-06
+  github:
+    domain: apps
+    resource_types:
+    - repository
+    - dependabot_alert
+    - branch_protection
+    cadence: daily
+    regional: false
+    evidence_for:
+    - AK-APP-01
+    - AK-APP-05
+    - AK-PIP-01
+    - AK-PIP-12
+  iam:
+    domain: infra
+    resource_types:
+    - AWS::IAM::Role
+    - AWS::IAM::User
+    - AWS::IAM::Policy
+    cadence: hourly
+    regional: false
+    evidence_for:
+    - AK-PIP-04
+    - AK-PIP-05
+  image_trace:
+    domain: pipelines
+    resource_types:
+    - AWS::ECR::Image
+    cadence: on_delivery
+    regional: true
+    evidence_for:
+    - AK-PIP-02
+  jenkins:
+    domain: pipelines
+    resource_types:
+    - job
+    - credential
+    - plugin
+    cadence: hourly
+    regional: false
+    evidence_for:
+    - AK-DEP-03
+    - AK-PIP-01
+    - AK-PIP-04
+    - AK-PIP-06
+    - AK-PIP-07
+    - AK-PIP-10
+    - AK-PIP-12
+  kubernetes:
+    domain: infra
+    resource_types:
+    - Namespace
+    - Deployment
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-APP-05
+    - AK-GRP-02
+  license_manager:
+    domain: infra
+    resource_types:
+    - AWS::LicenseManager::LicenseConfiguration
+    cadence: daily
+    regional: true
+    evidence_for:
+    - AK-INF-09
+  lifecycle:
+    domain: infra
+    resource_types:
+    - runtime_version
+    - os_version
+    - engine_version
+    cadence: daily
+    regional: false
+    evidence_for:
+    - AK-INF-03
+    - AK-INF-04
+    - AK-INF-05
+  parsers:
+    domain: pipelines
+    resource_types: []
+    cadence: on_delivery
+    regional: false
+    evidence_for:
+    - AK-PIP-01
+    - AK-PIP-06
+    note: 'Not a collector: P2-16 pipeline-definition parsers, run over collector output.'
+  rds:
+    domain: infra
+    resource_types:
+    - AWS::RDS::DBInstance
+    - AWS::RDS::DBCluster
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-APP-02
+    - AK-DEP-02
+    - AK-INF-08
+  redaction log:
+    domain: apps
+    resource_types: []
+    cadence: on_delivery
+    regional: false
+    evidence_for:
+    - AK-APP-03
+    note: 'Not a collector: the log the ecs collector writes to when it strips a secret value (CLAUDE.md
+      #5).'
+  route53:
+    domain: infra
+    resource_types:
+    - AWS::Route53::HostedZone
+    - AWS::Route53::RecordSet
+    cadence: daily
+    regional: false
+    evidence_for:
+    - AK-APP-06
+  ssm_inventory:
+    domain: infra
+    resource_types:
+    - AWS::SSM::ManagedInstanceInventory
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-COV-02
+    - AK-COV-04
+    - AK-GRP-08
+    - AK-GRP-09
+    - AK-INF-04
+    - AK-INF-05
+    - AK-INF-09
+  tagging:
+    domain: infra
+    resource_types:
+    - '*'
+    cadence: hourly
+    regional: true
+    evidence_for:
+    - AK-COV-03
+    - AK-GRP-04
+    - AK-GRP-10
+  tfstate:
+    domain: infra
+    resource_types:
+    - terraform_resource
+    cadence: hourly
+    regional: false
+    evidence_for:
+    - AK-GRP-02
+    - AK-GRP-10
+    - AK-INF-08
+    - AK-INF-10
+  tfstate_history:
+    domain: pipelines
+    resource_types:
+    - terraform_state_write
+    cadence: hourly
+    regional: false
+    evidence_for:
+    - AK-PIP-03
+  validation:
+    domain: infra
+    resource_types: []
+    cadence: on_delivery
+    regional: false
+    evidence_for:
+    - AK-VAL-01
+    - AK-VAL-02
+    note: 'Not a collector: P5-01/P5-02 validation-workbook responses.'
+  wellarchitected:
+    domain: infra
+    resource_types:
+    - AWS::WellArchitected::Workload
+    cadence: daily
+    regional: false
+    evidence_for:
+    - AK-MAT-01

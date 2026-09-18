@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://condor.internal/schemas/finding-rule.json",
+  "title": "Finding rule catalog entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rule_id",
+    "domain",
+    "description",
+    "inputs",
+    "logic_ref",
+    "severity",
+    "monetization_ref",
+    "answer_key_ids"
+  ],
+  "properties": {
+    "rule_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["infra", "apps", "pipelines"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Canonical-model tables/attributes this rule reads."
+    },
+    "logic_ref": {
+      "type": "string",
+      "description": "Where the rule's implementation lives (a module path or function name)."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "monetization_ref": {
+      "type": "string",
+      "description": "Which platform/casegen valuation function computes this rule's value_usd band."
+    },
+    "answer_key_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^AK-[A-Z]{2,3}-[0-9]{2}$"
+      }
+    }
+  }
+}
