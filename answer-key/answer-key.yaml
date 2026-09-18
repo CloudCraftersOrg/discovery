@@ -1,0 +1,748 @@
+# Generated from tasks/P1-02.md's table. Do not add or remove items
+# without a PR marked "answer-key change" (CLAUDE.md-adjacent rule
+# stated directly in P1-02).
+tolerance_defaults:
+  dora:
+    deploy_frequency: 0
+    change_failure_rate: 0.05
+    lead_time_pct: 10
+  cost_pct: 5
+items:
+- id: AK-COV-01
+  domain: coverage
+  kind: coverage
+  subject:
+    resource_ref: denied_region_canary
+  expect:
+    status: access_denied
+    run_outcome: success
+  evidence_sources:
+  - all regional collectors
+  planted_by: P1-04
+  checked_in_phase: 2
+- id: AK-COV-02
+  domain: coverage
+  kind: coverage
+  subject:
+    resource_ref: reportes-worker
+  expect:
+    ssm_inventory: absent
+  evidence_sources:
+  - ssm_inventory
+  - config
+  planted_by: P1-10
+  checked_in_phase: 2
+- id: AK-COV-03
+  domain: coverage
+  kind: coverage
+  subject:
+    resource_ref: tag:managed-by=discovery-platform
+  expect:
+    in_scope: false
+    in_cost: false
+  evidence_sources:
+  - tagging
+  - cur
+  planted_by: P3-04
+  checked_in_phase: 2
+- id: AK-COV-04
+  domain: coverage
+  kind: coverage
+  subject:
+    resource_ref: promo-2024-instance
+  expect:
+    ssm_inventory: absent
+  evidence_sources:
+  - ssm_inventory
+  - config
+  planted_by: P1-12
+  checked_in_phase: 2
+- id: AK-GRP-01
+  domain: infra
+  kind: grouping
+  subject:
+    app: tienda
+  expect:
+    via: cloudformation
+    confidence: 0.95
+  evidence_sources:
+  - cloudformation
+  planted_by: P1-06
+  checked_in_phase: 2
+- id: AK-GRP-02
+  domain: infra
+  kind: grouping
+  subject:
+    app: pagos
+  expect:
+    via: tfstate
+    confidence: 0.95
+    corroborated_by: kubernetes:namespace=pagos
+  evidence_sources:
+  - tfstate
+  - kubernetes
+  planted_by: P1-07
+  checked_in_phase: 2
+- id: AK-GRP-03
+  domain: infra
+  kind: grouping
+  subject:
+    app: inventario
+  expect:
+    via: ecs_service
+    confidence: 0.9
+  evidence_sources:
+  - ecs
+  planted_by: P1-08
+  checked_in_phase: 2
+- id: AK-GRP-04
+  domain: infra
+  kind: grouping
+  subject:
+    app: facturacion
+  expect:
+    via: tag:app=facturacion
+    confidence: 0.75
+  evidence_sources:
+  - tagging
+  planted_by: P1-09
+  checked_in_phase: 2
+- id: AK-GRP-05
+  domain: infra
+  kind: grouping
+  subject:
+    app: reportes
+  expect:
+    via: asg_elb_target_group
+    confidence: 0.9
+  evidence_sources:
+  - asg
+  - elb
+  planted_by: P1-10
+  checked_in_phase: 2
+- id: AK-GRP-06
+  domain: infra
+  kind: grouping
+  subject:
+    app: reportes
+    resource_ref: reportes-worker
+  expect:
+    via: flowlogs
+    confidence: 0.5
+    state: pre_validation
+  evidence_sources:
+  - flowlogs
+  planted_by: P1-10
+  checked_in_phase: 2
+- id: AK-GRP-07
+  domain: infra
+  kind: grouping
+  subject:
+    resource_ref: promo-2024-instance
+  expect:
+    grouped: false
+  evidence_sources:
+  - config
+  planted_by: P1-12
+  checked_in_phase: 2
+- id: AK-GRP-08
+  domain: infra
+  kind: grouping
+  subject:
+    resource_ref: condor-jenkins
+  expect:
+    classified_as: platform_tooling
+    in_any_app: false
+  evidence_sources:
+  - ssm_inventory
+  - config
+  planted_by: P1-11
+  checked_in_phase: 2
+- id: AK-GRP-09
+  domain: infra
+  kind: grouping
+  subject:
+    resource_ref: condor-gh-runner
+  expect:
+    classified_as: platform_tooling
+  evidence_sources:
+  - ssm_inventory
+  - config
+  planted_by: P1-07
+  checked_in_phase: 2
+- id: AK-GRP-10
+  domain: infra
+  kind: grouping
+  subject:
+    resource_ref: tag:managed-by
+  expect:
+    managed-by=cloud-governance: grouped governance, not an application
+    network/ state resources: grouped shared_infrastructure, not an application
+  evidence_sources:
+  - tagging
+  - tfstate
+  planted_by: P1-03
+  checked_in_phase: 2
+- id: AK-GRP-11
+  domain: infra
+  kind: metric
+  subject: {}
+  expect:
+    reports:
+    - declared_count
+    - inferred_count
+    - ungrouped_count
+  evidence_sources:
+  - derived
+  planted_by: P4-04
+  checked_in_phase: 4
+- id: AK-DEP-01
+  domain: infra
+  kind: dependency
+  subject:
+    app: tienda
+    resource_ref: pagos
+  expect:
+    direction: tienda->pagos
+  evidence_sources:
+  - flowlogs
+  - elb
+  planted_by: P1-06
+  checked_in_phase: 2
+- id: AK-DEP-02
+  domain: infra
+  kind: dependency
+  subject:
+    app: inventario
+    resource_ref: condor-tienda-db
+  expect:
+    direction: inventario->tienda_rds
+  evidence_sources:
+  - flowlogs
+  - rds
+  planted_by: P1-08
+  checked_in_phase: 2
+- id: AK-DEP-03
+  domain: pipelines
+  kind: dependency
+  subject:
+    pipeline_ref: facturacion-nightly-export
+    app: facturacion
+  expect:
+    kind: operational_automation
+  evidence_sources:
+  - jenkins
+  - cloudtrail
+  planted_by: P1-11
+  checked_in_phase: 2
+- id: AK-INF-01
+  domain: infra
+  kind: finding
+  subject:
+    app: tienda
+  expect:
+    finding: asg_rightsizing_opportunity
+  evidence_sources:
+  - compute_optimizer
+  - cost_optimization_hub
+  planted_by: P1-06
+  checked_in_phase: 2
+- id: AK-INF-02
+  domain: infra
+  kind: finding
+  subject: {}
+  expect:
+    finding: no_savings_plans_coverage
+  evidence_sources:
+  - cost_optimization_hub
+  - cur
+  planted_by: P1-03
+  checked_in_phase: 2
+- id: AK-INF-03
+  domain: infra
+  kind: finding
+  subject:
+    app: pagos
+  expect:
+    finding: eks_version_nearest_eos
+  evidence_sources:
+  - eks
+  - lifecycle
+  planted_by: P1-07
+  checked_in_phase: 2
+- id: AK-INF-04
+  domain: infra
+  kind: finding
+  subject:
+    app: facturacion
+  expect:
+    finding: windows_server_2016_extended_support_eos
+  evidence_sources:
+  - ssm_inventory
+  - lifecycle
+  planted_by: P1-09
+  checked_in_phase: 2
+- id: AK-INF-05
+  domain: infra
+  kind: finding
+  subject:
+    resource_ref: condor-jenkins
+  expect:
+    finding: amazon_linux_2_past_eos
+  evidence_sources:
+  - ssm_inventory
+  - lifecycle
+  planted_by: P1-11
+  checked_in_phase: 2
+- id: AK-INF-06
+  domain: infra
+  kind: finding
+  subject:
+    resource_ref: JENKINS_HOME
+  expect:
+    finding: no_backup
+  evidence_sources:
+  - backup
+  - ebs
+  planted_by: P1-11
+  checked_in_phase: 2
+- id: AK-INF-07
+  domain: infra
+  kind: finding
+  subject:
+    resource_ref: promo-2024-instance
+  expect:
+    finding: unattached_ebs_and_unused_eip
+  evidence_sources:
+  - config
+  - cost_optimization_hub
+  planted_by: P1-12
+  checked_in_phase: 2
+- id: AK-INF-08
+  domain: infra
+  kind: finding
+  subject:
+    app: pagos
+    resource_ref: condor-pagos-db
+  expect:
+    finding: aurora_parameter_drift_from_tfstate
+  evidence_sources:
+  - tfstate
+  - rds
+  - cloudtrail
+  planted_by: P1-13
+  checked_in_phase: 2
+- id: AK-INF-09
+  domain: infra
+  kind: finding
+  subject:
+    app: facturacion
+  expect:
+    finding: sql_server_standard_license_included
+  evidence_sources:
+  - license_manager
+  - ssm_inventory
+  planted_by: P1-09
+  checked_in_phase: 2
+- id: AK-INF-10
+  domain: infra
+  kind: metric
+  subject: {}
+  expect:
+    reports: iac_coverage
+    clickops_resource_list_equals: estate/clickops/manifest.json
+  evidence_sources:
+  - config
+  - cloudformation
+  - tfstate
+  planted_by: P2-08
+  checked_in_phase: 4
+- id: AK-APP-01
+  domain: apps
+  kind: finding
+  subject:
+    app: tienda
+  expect:
+    finding: outdated_dependency_with_advisory
+    also: condor-reportes
+  evidence_sources:
+  - github
+  planted_by: P1-05
+  checked_in_phase: 2
+- id: AK-APP-02
+  domain: apps
+  kind: finding
+  subject:
+    app: inventario
+    resource_ref: condor-tienda-db
+  expect:
+    finding: shared_database_with_tienda
+  evidence_sources:
+  - flowlogs
+  - rds
+  - ecs
+  planted_by: P1-08
+  checked_in_phase: 2
+- id: AK-APP-03
+  domain: apps
+  kind: finding
+  subject:
+    app: inventario
+  expect:
+    finding: plaintext_secret_in_task_definition
+    value: redacted
+  evidence_sources:
+  - ecs
+  - redaction log
+  planted_by: P1-08
+  checked_in_phase: 2
+- id: AK-APP-04
+  domain: apps
+  kind: finding
+  subject:
+    app:
+    - inventario
+    - reportes
+    - facturacion
+  expect:
+    finding: unmonitored_apps
+  evidence_sources:
+  - cloudwatch_alarms
+  planted_by: P1-08
+  checked_in_phase: 2
+- id: AK-APP-05
+  domain: apps
+  kind: metric
+  subject: {}
+  expect:
+    tienda: Python
+    pagos: Node.js
+    inventario: Python
+    reportes: Java
+  evidence_sources:
+  - github
+  - ecs
+  - kubernetes
+  planted_by: P1-05
+  checked_in_phase: 2
+- id: AK-APP-06
+  domain: apps
+  kind: metric
+  subject: {}
+  expect:
+    reports: entry_points_per_app_from_private_dns_and_listeners
+  evidence_sources:
+  - route53
+  - elb
+  planted_by: P1-04
+  checked_in_phase: 2
+- id: AK-PIP-01
+  domain: pipelines
+  kind: link
+  subject: {}
+  expect:
+    tienda: codepipeline
+    pagos: github_actions
+    reportes: jenkins
+    each_confirmed_by: cloudtrail
+  evidence_sources:
+  - codepipeline
+  - github
+  - jenkins
+  - cloudtrail
+  - parsers
+  planted_by: P1-06
+  checked_in_phase: 2
+- id: AK-PIP-02
+  domain: pipelines
+  kind: finding
+  subject:
+    app: inventario
+  expect:
+    finding: manual_deploy
+    actor: dev.juan
+    matching_pipeline_run: false
+  evidence_sources:
+  - ecr
+  - cloudtrail
+  - image_trace
+  planted_by: P1-13
+  checked_in_phase: 2
+- id: AK-PIP-03
+  domain: pipelines
+  kind: finding
+  subject:
+    app: pagos
+  expect:
+    finding: manual_deploy
+    actor: dev.maria
+    channel: tfstate_write
+  evidence_sources:
+  - tfstate_history
+  - cloudtrail
+  planted_by: P1-13
+  checked_in_phase: 2
+- id: AK-PIP-04
+  domain: pipelines
+  kind: finding
+  subject:
+    resource_ref: condor-jenkins credential store
+  expect:
+    finding: static_keys
+    users:
+    - dev.juan
+    - dev.maria
+    - svc.jenkins-export
+  evidence_sources:
+  - iam
+  - jenkins
+  planted_by: P1-11
+  checked_in_phase: 2
+- id: AK-PIP-05
+  domain: pipelines
+  kind: finding
+  subject:
+    resource_ref:
+    - tienda-codebuild-role
+    - condor-jenkins-instance-profile
+  expect:
+    finding: admin_roles
+  evidence_sources:
+  - iam
+  planted_by: P1-06
+  checked_in_phase: 2
+- id: AK-PIP-06
+  domain: pipelines
+  kind: finding
+  subject:
+    app: reportes
+  expect:
+    finding: no_approval_before_deploy
+  evidence_sources:
+  - jenkins
+  - parsers
+  planted_by: P1-10
+  checked_in_phase: 2
+- id: AK-PIP-07
+  domain: pipelines
+  kind: finding
+  subject:
+    pipeline_ref: facturacion-nightly-export
+  expect:
+    finding: defined_only_in_jenkins
+  evidence_sources:
+  - jenkins
+  planted_by: P1-11
+  checked_in_phase: 2
+- id: AK-PIP-08
+  domain: pipelines
+  kind: finding
+  subject:
+    pipeline_ref: condor-promo-2024
+  expect:
+    finding: dead_pipeline
+    target_stack: missing
+  evidence_sources:
+  - codepipeline
+  - cloudformation
+  planted_by: P1-12
+  checked_in_phase: 2
+- id: AK-PIP-09
+  domain: pipelines
+  kind: finding
+  subject:
+    resource_ref: condor-inventario ECR repo
+  expect:
+    finding: mutable_tags_scan_off_latest_in_use
+  evidence_sources:
+  - ecr
+  - ecs
+  planted_by: P1-08
+  checked_in_phase: 2
+- id: AK-PIP-10
+  domain: pipelines
+  kind: finding
+  subject:
+    resource_ref: condor-jenkins
+  expect:
+    finding: outdated_lts_plugin_with_advisory_builds_on_controller
+  evidence_sources:
+  - jenkins
+  planted_by: P1-11
+  checked_in_phase: 2
+- id: AK-PIP-11
+  domain: pipelines
+  kind: finding
+  subject:
+    app:
+    - inventario
+    - facturacion
+  expect:
+    finding: no_pipeline
+  evidence_sources:
+  - derived
+  planted_by: P1-08
+  checked_in_phase: 2
+- id: AK-PIP-12
+  domain: pipelines
+  kind: metric
+  subject:
+    app:
+    - tienda
+    - pagos
+    - reportes
+  expect:
+    reports: dora_metrics
+    tolerance_source: estate/harness/ledger.jsonl
+  evidence_sources:
+  - codepipeline
+  - github
+  - jenkins
+  planted_by: P1-14
+  checked_in_phase: 4
+  tolerance:
+    deploy_frequency: 0
+    change_failure_rate: 0.05
+    lead_time_pct: 10
+- id: AK-DEC-01
+  domain: infra
+  kind: finding
+  subject:
+    resource_ref: promo-2024-instance
+  expect:
+    finding: decommission_candidate
+    cpu_p95_under_pct: 2
+    accepted_flows: 0
+    changes_or_deploys: 0
+    saving: quantified
+  evidence_sources:
+  - cloudwatch
+  - flowlogs
+  - config
+  - cloudtrail
+  - cur
+  planted_by: P1-12
+  checked_in_phase: 4
+- id: AK-MAT-01
+  domain: infra
+  kind: metric
+  subject:
+    app: condor-estate
+  expect:
+    reports: wellarchitected_workload_review_results
+  evidence_sources:
+  - wellarchitected
+  planted_by: P2-06
+  checked_in_phase: 4
+- id: AK-VAL-01
+  domain: business_case
+  kind: validation
+  subject:
+    resource_ref: reportes-worker
+    app: facturacion
+  expect:
+    action: owner_reassigns
+    then: facturacion_cost_and_business_case_change
+  evidence_sources:
+  - validation
+  planted_by: P5-01
+  checked_in_phase: 5
+- id: AK-VAL-02
+  domain: business_case
+  kind: validation
+  subject:
+    resource_ref: promo-2024-instance
+  expect:
+    state: unowned
+    action: escalated_sponsor_signs_off
+    produces: staged_stop_observe_terminate_plan
+  evidence_sources:
+  - validation
+  planted_by: P5-01
+  checked_in_phase: 5
+- id: AK-BC-01
+  domain: business_case
+  kind: business_case
+  subject: {}
+  expect:
+    baseline_reconciles_to_cur_within_pct: 1
+    platform: excluded
+  evidence_sources:
+  - cur
+  planted_by: P5-04
+  checked_in_phase: 5
+  tolerance:
+    cost_pct: 5
+- id: AK-BC-02
+  domain: business_case
+  kind: business_case
+  subject: {}
+  expect:
+    every_line_and_finding_has:
+    - value_usd
+    - band
+    - realization_lag_days
+  evidence_sources:
+  - derived
+  planted_by: P5-04
+  checked_in_phase: 5
+- id: AK-BC-03
+  domain: business_case
+  kind: business_case
+  subject: {}
+  expect:
+    target_run_rate_line: placeholder
+    sourced_from: aws_transform
+  evidence_sources:
+  - derived
+  planted_by: P5-04
+  checked_in_phase: 5
+- id: AK-BC-04
+  domain: business_case
+  kind: business_case
+  subject:
+    app:
+    - facturacion
+    - inventario
+    - pagos
+    - reportes
+    resource_ref: condor-jenkins
+  expect:
+    reports: modernization_candidates
+    each_with: evidence_links
+  evidence_sources:
+  - derived
+  planted_by: P5-05
+  checked_in_phase: 5
+- id: AK-BC-05
+  domain: business_case
+  kind: business_case
+  subject: {}
+  expect:
+    handoff_package_validates_against: docs/contracts/transform-handoff.schema.json
+  evidence_sources:
+  - derived
+  planted_by: P5-05
+  checked_in_phase: 5
+- id: AK-QLT-01
+  domain: quality
+  kind: quality
+  subject: {}
+  expect:
+    identity_resolution_precision_gte: 0.95
+    identity_resolution_recall_gte: 0.9
+  evidence_sources:
+  - derived
+  planted_by: P4-02
+  checked_in_phase: 4
+- id: AK-QLT-02
+  domain: quality
+  kind: quality
+  subject: {}
+  expect:
+    replay: delete_aurora_and_derived_tables_rebuild_from_raw
+    marts: identical
+  evidence_sources:
+  - derived
+  planted_by: P4-10
+  checked_in_phase: 4

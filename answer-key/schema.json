@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://condor.internal/schemas/answer-key-item.json",
+  "title": "Answer key item",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "domain",
+    "kind",
+    "subject",
+    "expect",
+    "evidence_sources",
+    "planted_by",
+    "checked_in_phase"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^AK-[A-Z]{2,3}-[0-9]{2}$"
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["infra", "apps", "pipelines", "coverage", "business_case", "quality"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "grouping",
+        "dependency",
+        "finding",
+        "link",
+        "metric",
+        "coverage",
+        "validation",
+        "business_case",
+        "quality"
+      ],
+      "description": "P1-02's own field list omits 'quality', but its item table uses it for AK-QLT-01/02. The table is authoritative (P1-02: 'containing exactly the items below') — extended here rather than dropping those two items."
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "app": {},
+        "resource_ref": {},
+        "pipeline_ref": {}
+      }
+    },
+    "expect": {
+      "type": "object"
+    },
+    "evidence_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "planted_by": {
+      "type": "string",
+      "pattern": "^P[1-5]-[0-9]{2}$"
+    },
+    "checked_in_phase": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 5
+    },
+    "tolerance": {
+      "type": "object"
+    }
+  }
+}
