@@ -1,0 +1,14 @@
+[Unit]
+Description=Condor Tienda
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/condor-tienda
+EnvironmentFile=/etc/condor-tienda.env
+ExecStart=/opt/condor-tienda/venv/bin/gunicorn -w 2 -b 0.0.0.0:8080 app:app
+Restart=on-failure
+User=condor-tienda
+
+[Install]
+WantedBy=multi-user.target
