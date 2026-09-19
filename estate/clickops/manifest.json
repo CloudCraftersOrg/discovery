@@ -1,0 +1,79 @@
+{
+  "resources": [
+    {
+      "kind": "security-group",
+      "id": "sg-02080e36269895525",
+      "app": "reportes"
+    },
+    {
+      "kind": "security-group",
+      "id": "sg-081e2c7a0443b5d47",
+      "app": "reportes"
+    },
+    {
+      "kind": "iam-role",
+      "id": "condor-reportes-instance-role",
+      "app": "reportes"
+    },
+    {
+      "kind": "instance-profile",
+      "id": "condor-reportes-instance-profile",
+      "app": "reportes"
+    },
+    {
+      "kind": "iam-role",
+      "id": "condor-reportes-codedeploy-role",
+      "app": "reportes"
+    },
+    {
+      "kind": "s3-bucket",
+      "id": "condor-reportes-artifacts-337058058699",
+      "app": "reportes"
+    },
+    {
+      "kind": "target-group",
+      "id": "arn:aws:elasticloadbalancing:us-east-1:337058058699:targetgroup/condor-reportes/0b209877a8001639",
+      "app": "reportes"
+    },
+    {
+      "kind": "load-balancer",
+      "id": "arn:aws:elasticloadbalancing:us-east-1:337058058699:loadbalancer/app/condor-reportes/35287de97e69e501",
+      "app": "reportes"
+    },
+    {
+      "kind": "listener",
+      "id": "arn:aws:elasticloadbalancing:us-east-1:337058058699:listener/app/condor-reportes/35287de97e69e501/43e0f92efa9e2e2b",
+      "app": "reportes"
+    },
+    {
+      "kind": "route53-record",
+      "id": "reportes.condor.internal",
+      "app": "reportes"
+    },
+    {
+      "kind": "launch-template",
+      "id": "lt-0a135e44224c07f20",
+      "app": "reportes"
+    },
+    {
+      "kind": "autoscaling-group",
+      "id": "condor-reportes",
+      "app": "reportes"
+    },
+    {
+      "kind": "codedeploy-application",
+      "id": "condor-reportes",
+      "app": "reportes"
+    },
+    {
+      "kind": "codedeploy-deployment-group",
+      "id": "condor-reportes-prod",
+      "app": "reportes"
+    },
+    {
+      "kind": "ec2-instance",
+      "id": "i-0483548636c867dab",
+      "app": "reportes"
+    }
+  ]
+}

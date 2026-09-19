@@ -3,6 +3,8 @@ os: linux
 files:
   - source: /condor-reportes.jar
     destination: /opt/condor-reportes
+  - source: /deploy/condor-reportes.service
+    destination: /opt/condor-reportes/deploy
 hooks:
   ApplicationStop:
     - location: scripts/stop.sh
