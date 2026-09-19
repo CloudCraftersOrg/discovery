@@ -74,6 +74,41 @@
       "kind": "ec2-instance",
       "id": "i-0483548636c867dab",
       "app": "reportes"
+    },
+    {
+      "kind": "ec2-instance",
+      "id": "i-04e006ee373284653",
+      "app": "promo"
+    },
+    {
+      "kind": "ebs-volume",
+      "id": "vol-0c7a159446bd25adf",
+      "app": "promo"
+    },
+    {
+      "kind": "elastic-ip",
+      "id": "eipalloc-0fbad1f5d1a9c9c72",
+      "app": "promo"
+    },
+    {
+      "kind": "s3-bucket",
+      "id": "condor-promo-src-337058058699",
+      "app": "promo"
+    },
+    {
+      "kind": "iam-role",
+      "id": "condor-promo-2024-pipeline-role",
+      "app": "promo"
+    },
+    {
+      "kind": "iam-role",
+      "id": "condor-promo-2024-cfn-role",
+      "app": "promo"
+    },
+    {
+      "kind": "codepipeline",
+      "id": "condor-promo-2024",
+      "app": "promo"
     }
   ]
 }
