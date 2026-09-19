@@ -101,6 +101,19 @@ data "aws_iam_policy_document" "condor_bootstrap_access" {
     ]
   }
 
+  # Pricing API for recording hourly costs in PR writeups (P1-09's "record
+  # its hourly price" and similar) — read-only, global service.
+  statement {
+    sid    = "PricingRead"
+    effect = "Allow"
+    actions = [
+      "pricing:DescribeServices",
+      "pricing:GetAttributeValues",
+      "pricing:GetProducts",
+    ]
+    resources = ["*"]
+  }
+
   statement {
     sid       = "IamRead"
     effect    = "Allow"
