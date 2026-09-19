@@ -43,16 +43,29 @@
         <version>3.3.1</version>
       </plugin>
       <plugin>
+        <!--
+          A plain jar only packages our own classes - jackson-databind's own
+          runtime dependencies (jackson-core, jackson-annotations) were never
+          bundled, so `java -jar` standalone hit NoClassDefFoundError even
+          though `mvn package` (which uses the full build classpath) looked
+          fine. Shade into one self-contained jar instead.
+        -->
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.4.1</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>internal.condor.reportes.Main</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>internal.condor.reportes.Main</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
