@@ -15,7 +15,7 @@ Values: `todo`, `in_progress`, `blocked`, `review`, `done`. Agents update their 
 | P1-09 | Facturación (clickops) | todo | |
 | P1-10 | Reportes (clickops) | done | Applied 2026-09-18, verified live: both ASG instances healthy in target group, HTTP /report reachable via ALB and Route53 (reportes.condor.internal), worker absent from SSM inventory, worker traffic confirmed in VPC flow logs. Fixed 3 bugs found during real deploy: appspec never shipped the systemd unit, service user never created, un-shaded jar hit NoClassDefFoundError on jackson-databind transitive deps. Same systemd-unit/user fixes proactively applied to condor-tienda. |
 | P1-11 | Jenkins controller | todo | |
-| P1-12 | Promo 2024 (clickops, second region) | todo | |
+| P1-12 | Promo 2024 (clickops, isolated subnet) | done | Applied 2026-09-18, verified live: instance running with no instance profile (AK-COV-04), unattached 20GiB gp3 volume + unassociated EIP (AK-INF-07), pipeline ran once and its target stack was then deleted (AK-PIP-08) — `codepipeline get-pipeline` succeeds, `cloudformation describe-stacks` returns does-not-exist. Real bug found on first pipeline run: unquoted `PLANTED: AK-PIP-08` inside the CFN template's `Description:` broke YAML parsing (colon-space inside a plain scalar) — fixed by quoting the string. |
 | P1-13 | Planted human changes: laptop apply and console drift | todo | |
 | P1-14 | History and traffic generators | todo | |
 | P1-15 | Estate verification and history start | todo | |

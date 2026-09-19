@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "condor-promo-2024-web -- trivial target stack for the dead pipeline (PLANTED: AK-PIP-08)"
+Resources:
+  PromoMarker:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /condor/promo-2024/marker
+      Type: String
+      Value: condor-promo-2024
