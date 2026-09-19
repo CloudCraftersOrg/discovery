@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /opt/condor-tienda
+hooks:
+  AfterInstall:
+    - location: scripts/install_deps.sh
+      timeout: 120
+      runas: root
+  ApplicationStart:
+    - location: scripts/start.sh
+      timeout: 30
+      runas: root
+  ApplicationStop:
+    - location: scripts/stop.sh
+      timeout: 30
+      runas: root
