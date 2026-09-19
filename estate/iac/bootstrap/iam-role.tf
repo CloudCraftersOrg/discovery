@@ -15,6 +15,12 @@ data "aws_iam_policy_document" "condor_bootstrap_access" {
       "codeconnections:*",
       "codedeploy:*",
       "codepipeline:*",
+      # AWS::CodeStarConnections::Connection (the CFN resource type) and
+      # CodePipeline's PassConnection/UseConnection still check this legacy
+      # prefix, not codeconnections:* above - AccessDenied against
+      # condor-bootstrap itself (the caller creating the pipeline), not the
+      # pipeline's own service role, on a real apply.
+      "codestar-connections:*",
       "ec2:*",
       "ecr:*",
       "ecs:*",
@@ -53,6 +59,25 @@ data "aws_iam_policy_document" "condor_bootstrap_access" {
     resources = ["*"]
   }
 
+  # No KMS statement at all until P1-06's RDS ManageMasterUserPassword hit
+  # AccessDeniedException on kms:DescribeKey against the AWS-managed
+  # aws/secretsmanager key - every estate task touching an AWS-managed key
+  # (Secrets Manager, RDS storage encryption, SSM) needs this, not just this one.
+  statement {
+    sid    = "AwsManagedKeys"
+    effect = "Allow"
+    actions = [
+      "kms:CreateGrant",
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey*",
+      "kms:ListAliases",
+      "kms:RetireGrant",
+    ]
+    resources = ["*"]
+  }
+
   statement {
     sid     = "CondorBuckets"
     effect  = "Allow"
@@ -69,6 +94,10 @@ data "aws_iam_policy_document" "condor_bootstrap_access" {
     actions = ["secretsmanager:*"]
     resources = [
       "arn:aws:secretsmanager:*:*:secret:condor/*",
+      # rds!* covers the master secret RDS creates when ManageMasterUserPassword
+      # is set - CreateSecret AccessDenied on a real P1-06 apply, RDS names
+      # these outside our own condor/ prefix and we don't control the name.
+      "arn:aws:secretsmanager:*:*:secret:rds!*",
     ]
   }
 
@@ -101,6 +130,7 @@ data "aws_iam_policy_document" "condor_bootstrap_access" {
     sid    = "EstateRoles"
     effect = "Allow"
     actions = [
+      "iam:AddRoleToInstanceProfile",
       "iam:AttachRolePolicy",
       "iam:CreateInstanceProfile",
       "iam:CreateRole",
@@ -110,6 +140,7 @@ data "aws_iam_policy_document" "condor_bootstrap_access" {
       "iam:DetachRolePolicy",
       "iam:PassRole",
       "iam:PutRolePolicy",
+      "iam:RemoveRoleFromInstanceProfile",
       "iam:TagInstanceProfile",
       "iam:TagRole",
       "iam:UpdateAssumeRolePolicy",
