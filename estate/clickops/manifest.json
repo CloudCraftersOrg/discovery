@@ -109,6 +109,21 @@
       "kind": "codepipeline",
       "id": "condor-promo-2024",
       "app": "promo"
+    },
+    {
+      "kind": "iam-role",
+      "id": "condor-facturacion-instance-role",
+      "app": "facturacion"
+    },
+    {
+      "kind": "instance-profile",
+      "id": "condor-facturacion-instance-profile",
+      "app": "facturacion"
+    },
+    {
+      "kind": "ec2-instance",
+      "id": "i-0dd68a2ee63fa31e3",
+      "app": "facturacion"
     }
   ]
 }
