@@ -23,11 +23,13 @@ yum install -y wget git unzip
 
 # AL2's bundled aws-cli (1.18.147, ~2020) predates RDS-managed master
 # passwords - DescribeDBClusters' MasterUserSecret silently drops (null,
-# not a permissions error - confirmed live). v2 installs ahead of it in PATH.
+# not a permissions error - confirmed live).
 curl -sL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
 unzip -q /tmp/awscliv2.zip -d /tmp
 /tmp/aws/install
 rm -rf /tmp/awscliv2.zip /tmp/aws
+# jenkins' PATH (/sbin:/bin:/usr/sbin:/usr/bin) has no /usr/local/bin - confirmed live.
+ln -sf /usr/local/bin/aws /usr/bin/aws
 
 # No agents (AK-PIP-10): builds run on the controller. AL2's yum maven
 # (3.0.5) is too old for surefire 3.3.1 (needs 3.6.3+) - confirmed live.
