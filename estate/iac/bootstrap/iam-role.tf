@@ -170,6 +170,21 @@ data "aws_iam_policy_document" "condor_bootstrap_access" {
     actions   = ["iam:CreateServiceLinkedRole"]
     resources = ["arn:aws:iam::*:role/aws-service-role/*"]
   }
+
+  # P1-07's GitHub Actions OIDC federation (estate/iac/runner/) - no
+  # provider-name prefix to scope by, one provider per issuer URL account-wide.
+  statement {
+    sid    = "GithubOidcProvider"
+    effect = "Allow"
+    actions = [
+      "iam:CreateOpenIDConnectProvider",
+      "iam:DeleteOpenIDConnectProvider",
+      "iam:GetOpenIDConnectProvider",
+      "iam:TagOpenIDConnectProvider",
+      "iam:UpdateOpenIDConnectProviderThumbprint",
+    ]
+    resources = ["arn:aws:iam::*:oidc-provider/*"]
+  }
 }
 
 resource "aws_iam_policy" "condor_bootstrap_access" {

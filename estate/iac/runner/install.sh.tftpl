@@ -1,0 +1,48 @@
+#!/bin/bash
+set -euo pipefail
+
+RUNNER_VERSION=${runner_version}
+GITHUB_ORG=${github_org}
+GITHUB_REPO=${github_repo}
+REG_TOKEN=${runner_registration_token}
+
+yum install -y -q tar gzip
+# The runner's own installdependencies.sh can't detect AL2023 ("Can't
+# detect current OS type based on /etc/os-release") and refuses to
+# install libicu, which its bundled .NET needs to even start - confirmed
+# live. Installing it directly instead.
+yum install -y -q libicu
+
+# deploy.yml runs here: needs docker to build the image and kubectl/helm to
+# deploy it. The EKS-published kubectl S3 path 404s (NoSuchKey) - upstream
+# dl.k8s.io works.
+yum install -y -q docker
+systemctl enable --now docker
+usermod -aG docker gh-runner
+curl -sL -o /usr/local/bin/kubectl "https://dl.k8s.io/release/v1.34.0/bin/linux/amd64/kubectl"
+chmod +x /usr/local/bin/kubectl
+curl -sL https://get.helm.sh/helm-v3.16.4-linux-amd64.tar.gz | tar xz -C /tmp
+mv /tmp/linux-amd64/helm /usr/local/bin/helm
+chmod +x /usr/local/bin/helm
+
+# condor-pagos needs Node >=24 to npm install/test - not on any base image.
+curl -fsSL https://rpm.nodesource.com/setup_24.x | bash -
+dnf install -y -q nodejs
+
+useradd --system --create-home --home-dir /opt/gh-runner --shell /bin/bash gh-runner || true
+
+cd /opt/gh-runner
+curl -sL -o runner.tar.gz "https://github.com/actions/runner/releases/download/v$${RUNNER_VERSION}/actions-runner-linux-x64-$${RUNNER_VERSION}.tar.gz"
+tar xzf runner.tar.gz
+chown -R gh-runner:gh-runner /opt/gh-runner
+
+sudo -u gh-runner ./config.sh \
+  --url "https://github.com/$${GITHUB_ORG}/$${GITHUB_REPO}" \
+  --token "$${REG_TOKEN}" \
+  --name condor-gh-runner \
+  --labels condor-private \
+  --unattended \
+  --replace
+
+./svc.sh install gh-runner
+./svc.sh start
