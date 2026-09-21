@@ -19,7 +19,15 @@ mount "$DEVICE" "$JENKINS_HOME"
 grep -q "$DEVICE" /etc/fstab || echo "$DEVICE $JENKINS_HOME ext4 defaults,nofail 0 2" >> /etc/fstab
 
 amazon-linux-extras install -y java-openjdk17 || yum install -y java-17-amazon-corretto-headless
-yum install -y wget git
+yum install -y wget git unzip
+
+# AL2's bundled aws-cli (1.18.147, ~2020) predates RDS-managed master
+# passwords - DescribeDBClusters' MasterUserSecret silently drops (null,
+# not a permissions error - confirmed live). v2 installs ahead of it in PATH.
+curl -sL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+unzip -q /tmp/awscliv2.zip -d /tmp
+/tmp/aws/install
+rm -rf /tmp/awscliv2.zip /tmp/aws
 
 # No agents (AK-PIP-10): builds run on the controller. AL2's yum maven
 # (3.0.5) is too old for surefire 3.3.1 (needs 3.6.3+) - confirmed live.
