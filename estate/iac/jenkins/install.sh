@@ -28,6 +28,28 @@ mkdir -p /opt/maven
 tar -xzf /tmp/maven.tar.gz -C /opt/maven --strip-components=1
 ln -sf /opt/maven/bin/mvn /usr/local/bin/mvn
 
+# AL2's yum python3 is 3.7.16 - too old for Tienda's Flask 3.0.3 (Requires-Python
+# >=3.8, confirmed live: pip silently filters to <=2.2.5). No python3.8+ extras
+# topic on this AL2 image either. Portable build instead of compiling from
+# source - AL2's glibc 2.26 satisfies python-build-standalone's baseline.
+PYTHON_URL=$(curl -s https://api.github.com/repos/astral-sh/python-build-standalone/releases/latest \
+  | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+m = [a["browser_download_url"] for a in d["assets"]
+     if "3.12" in a["name"]
+     and "x86_64-unknown-linux-gnu-install_only.tar.gz" in a["name"]
+     and "noopt" not in a["name"]
+     and "debug" not in a["name"]
+     and "freethreaded" not in a["name"]]
+print(m[0] if m else "")
+')
+curl -fsSL "$PYTHON_URL" -o /tmp/cpython312.tar.gz
+mkdir -p /opt/python3.12
+tar -xzf /tmp/cpython312.tar.gz -C /opt/python3.12 --strip-components=1
+rm -f /tmp/cpython312.tar.gz
+ln -sf /opt/python3.12/bin/python3.12 /usr/local/bin/python3.12
+
 useradd --system --no-create-home --home-dir "$JENKINS_HOME" --shell /sbin/nologin jenkins || true
 
 # git-client's known_hosts verification strategy fails the multibranch scan
