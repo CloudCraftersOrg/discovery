@@ -92,6 +92,13 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${ArtifactBucket}/*"
                   - !Sub "arn:aws:s3:::aws-codedeploy-${AWS::Region}/*"
+        - PolicyName: database-secret-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !GetAtt Database.MasterUserSecret.SecretArn
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -243,13 +250,18 @@ Resources:
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
-            dnf install -y ruby wget
+            dnf install -y ruby wget python3
             cd /tmp
             wget https://aws-codedeploy-${AWS::Region}.s3.${AWS::Region}.amazonaws.com/latest/install
             chmod +x ./install
             ./install auto
             systemctl enable codedeploy-agent
             systemctl start codedeploy-agent
+
+            DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ${Database.MasterUserSecret.SecretArn} --region ${AWS::Region} --query SecretString --output text | python3 -c 'import json,sys; print(json.load(sys.stdin)["password"])')
+            cat > /etc/condor-tienda.env <<ENVEOF
+            DATABASE_URL=postgresql://tienda:${!DB_PASSWORD}@${Database.Endpoint.Address}:5432/tienda
+            ENVEOF
 
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
