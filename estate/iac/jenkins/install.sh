@@ -50,7 +50,19 @@ tar -xzf /tmp/cpython312.tar.gz -C /opt/python3.12 --strip-components=1
 rm -f /tmp/cpython312.tar.gz
 ln -sf /opt/python3.12/bin/python3.12 /usr/local/bin/python3.12
 
+amazon-linux-extras install -y docker || yum install -y docker
+systemctl enable --now docker
+# EKS-published kubectl S3 path 404s (NoSuchKey) - dl.k8s.io works (same fix P1-07's runner needed).
+curl -sL -o /usr/local/bin/kubectl "https://dl.k8s.io/release/v1.34.0/bin/linux/amd64/kubectl"
+chmod +x /usr/local/bin/kubectl
+curl -sL https://get.helm.sh/helm-v3.16.4-linux-amd64.tar.gz | tar xz -C /tmp
+mv /tmp/linux-amd64/helm /usr/local/bin/helm
+chmod +x /usr/local/bin/helm
+curl -fsSL https://rpm.nodesource.com/setup_24.x | bash -
+yum install -y -q nodejs
+
 useradd --system --no-create-home --home-dir "$JENKINS_HOME" --shell /sbin/nologin jenkins || true
+usermod -aG docker jenkins
 
 # git-client's known_hosts verification strategy fails the multibranch scan
 # without this - confirmed live.
