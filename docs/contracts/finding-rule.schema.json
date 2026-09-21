@@ -11,8 +11,7 @@
     "inputs",
     "logic_ref",
     "severity",
-    "monetization_ref",
-    "answer_key_ids"
+    "monetization_ref"
   ],
   "properties": {
     "rule_id": {
@@ -51,7 +50,8 @@
       "items": {
         "type": "string",
         "pattern": "^AK-[A-Z]{2,3}-[0-9]{2}$"
-      }
+      },
+      "description": "PoC grading only: which answer-key items this rule is expected to satisfy. Optional, because a real engagement has no answer key, and a rule catalog that cannot be written without one is a catalog that only works against Condor. Every rule in THIS repository must still carry it - P4-07 asserts that, not the schema."
     }
   }
 }
