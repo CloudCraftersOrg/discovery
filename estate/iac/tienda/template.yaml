@@ -25,6 +25,13 @@ Parameters:
   GitHubRepositoryId:
     Type: String
     Default: CloudCraftersOrg/condor-tienda
+  GitHubConnectionArn:
+    Type: String
+    Default: arn:aws:codeconnections:us-east-1:337058058699:connection/3c0949ee-d542-419d-b3e0-31a7c0a9afb7
+    Description: >
+      Pre-existing, already-Available org connection. This stack's own
+      dedicated connection got stuck on the human GitHub OAuth handshake
+      (HANDOFF-P1-06.md) - reusing this one instead.
 
 Resources:
   AlbSecurityGroup:
@@ -290,12 +297,6 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
-  GitHubConnection:
-    Type: AWS::CodeStarConnections::Connection
-    Properties:
-      ConnectionName: condor-tienda
-      ProviderType: GitHub
-
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -341,7 +342,7 @@ Resources:
                 Provider: CodeStarSourceConnection
                 Version: "1"
               Configuration:
-                ConnectionArn: !Ref GitHubConnection
+                ConnectionArn: !Ref GitHubConnectionArn
                 FullRepositoryId: !Ref GitHubRepositoryId
                 BranchName: main
               OutputArtifacts: [{ Name: SourceOutput }]
@@ -369,6 +370,6 @@ Outputs:
   AlbDnsName:
     Value: !GetAtt LoadBalancer.DNSName
   ConnectionArn:
-    Value: !Ref GitHubConnection
+    Value: !Ref GitHubConnectionArn
   DatabaseEndpoint:
     Value: !GetAtt Database.Endpoint.Address
