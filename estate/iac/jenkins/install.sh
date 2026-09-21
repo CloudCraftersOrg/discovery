@@ -58,8 +58,6 @@ chmod +x /usr/local/bin/kubectl
 curl -sL https://get.helm.sh/helm-v3.16.4-linux-amd64.tar.gz | tar xz -C /tmp
 mv /tmp/linux-amd64/helm /usr/local/bin/helm
 chmod +x /usr/local/bin/helm
-curl -fsSL https://rpm.nodesource.com/setup_24.x | bash -
-yum install -y -q nodejs
 
 useradd --system --no-create-home --home-dir "$JENKINS_HOME" --shell /sbin/nologin jenkins || true
 usermod -aG docker jenkins
