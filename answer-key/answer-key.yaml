@@ -441,8 +441,12 @@ items:
   kind: link
   subject: {}
   expect:
-    tienda: codepipeline
-    pagos: github_actions
+    tienda:
+    - codepipeline
+    - jenkins
+    pagos:
+    - github_actions
+    - jenkins
     reportes: jenkins
     each_confirmed_by: cloudtrail
   evidence_sources:
