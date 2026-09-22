@@ -5,3 +5,4 @@
 {"ts": "2026-09-22T18:22:55Z", "app": "pagos", "kind": "expected_deploy_fail", "repo": "condor-pagos", "sha": "71a40f99f347808c27bd3d639ecfa5cfe43440bc", "note": "round-robin index 1"}
 {"ts": "2026-09-22T19:10:31Z", "app": "pagos", "kind": "fix", "repo": "condor-pagos", "sha": "f9dcd57712eb45243df76f6427dbfb88b7155b16", "note": "FAIL_DEPLOY marker removed manually, ahead of the harness round-robin (PR #15 on condor-pagos)"}
 {"ts": "2026-09-22T20:56:01Z", "app": "reportes", "kind": "expected_deploy_fail", "repo": "condor-reportes", "sha": "a61c68311be0146f59bd8b4863770030c746c470", "note": "round-robin index 2"}
+{"ts": "2026-09-22T23:31:18Z", "app": "tienda", "kind": "fix", "repo": "condor-tienda", "sha": "bde501c09ae65d5fa46c58f5edb7e31bd0f13eb2", "note": "round-robin index 3"}
