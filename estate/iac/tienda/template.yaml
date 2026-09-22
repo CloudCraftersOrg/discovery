@@ -261,6 +261,7 @@ Resources:
             DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ${Database.MasterUserSecret.SecretArn} --region ${AWS::Region} --query SecretString --output text | python3 -c 'import json,sys; print(json.load(sys.stdin)["password"])')
             cat > /etc/condor-tienda.env <<ENVEOF
             DATABASE_URL=postgresql://tienda:${!DB_PASSWORD}@${Database.Endpoint.Address}:5432/tienda
+            PAGOS_URL=http://pagos.condor.internal:8080/pay
             ENVEOF
 
   AutoScalingGroup:
