@@ -26,6 +26,13 @@ resource "aws_vpc_security_group_egress_rule" "pagos_db_all" {
 resource "aws_rds_cluster_parameter_group" "pagos" {
   name   = "condor-pagos-params"
   family = "aurora-mysql8.0"
+
+  # AK-INF-08: an undeclared parameter never shows up in a plan diff.
+  parameter {
+    name         = "max_connections"
+    value        = "150"
+    apply_method = "immediate"
+  }
 }
 
 resource "aws_rds_cluster" "pagos" {
