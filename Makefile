@@ -1,6 +1,6 @@
 .PHONY: lint test guard-estate guard-platform \
 	bootstrap-plan bootstrap-apply destroy-bootstrap \
-	plan-estate apply-estate destroy-estate refs check-planted
+	plan-estate apply-estate destroy-estate refs check-planted expected-metrics
 
 # Everything here is Terraform (CLAUDE.md #6). This Makefile only sequences
 # init/plan/apply/destroy per layer and enforces the account guard first —
@@ -61,3 +61,6 @@ refs: guard-estate
 
 check-planted: guard-estate
 	uv run estate/verify/check_planted.py
+
+expected-metrics: guard-estate
+	uv run estate/harness/expected_metrics.py
