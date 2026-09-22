@@ -1,0 +1,2 @@
+{"ts": "2026-09-22T11:05:28Z", "kind": "planted_change", "task": "P1-13", "answer_key_id": "AK-PIP-03", "actor": "dev.maria", "change": "aws_eks_node_group.pagos scaling_config.max_size 2 -> 3", "channel": "tfstate_write"}
+{"ts": "2026-09-22T11:05:38Z", "kind": "planted_change", "task": "P1-13", "answer_key_id": "AK-INF-08", "actor": "dev.maria", "change": "condor-pagos-params max_connections 150 (terraform-declared) -> 200 (console, untracked)", "channel": "console"}

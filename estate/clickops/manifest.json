@@ -184,6 +184,21 @@
       "kind": "ecs-service",
       "id": "condor-inventario",
       "app": "inventario"
+    },
+    {
+      "kind": "iam-user",
+      "id": "dev.maria",
+      "app": "pagos"
+    },
+    {
+      "kind": "iam-access-key",
+      "id": "AKIAU46RZ2HFRMPY6WWV",
+      "app": "pagos"
+    },
+    {
+      "kind": "secretsmanager-secret",
+      "id": "condor/harness/dev-maria",
+      "app": "pagos"
     }
   ]
 }

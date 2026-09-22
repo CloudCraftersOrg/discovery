@@ -64,6 +64,7 @@ cat > /tmp/dev-maria-policy.json <<EOF
       "Action": [
         "eks:DescribeCluster",
         "eks:DescribeNodegroup",
+        "eks:DescribeUpdate",
         "eks:UpdateNodegroupConfig",
         "eks:ListTagsForResource",
         "eks:TagResource",
@@ -78,7 +79,10 @@ cat > /tmp/dev-maria-policy.json <<EOF
       "Sid": "PagosNodeRoleRefreshOnly",
       "Effect": "Allow",
       "Action": ["iam:GetRole", "iam:ListAttachedRolePolicies", "iam:ListRolePolicies"],
-      "Resource": "arn:aws:iam::${ACCOUNT_ID}:role/condor-pagos-node-role"
+      "Resource": [
+        "arn:aws:iam::${ACCOUNT_ID}:role/condor-pagos-node-role",
+        "arn:aws:iam::${ACCOUNT_ID}:role/condor-pagos-cluster-role"
+      ]
     },
     {
       "Sid": "PagosParams",

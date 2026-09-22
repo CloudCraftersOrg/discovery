@@ -104,6 +104,36 @@ def jenkins_api(path):
     return resp.json()
 
 
+def trail_data_events(event_name, username, since):
+    # cloudtrail.lookup_events (Event History) doesn't surface S3 data
+    # events for this trail even minutes after delivery - confirmed by
+    # reading the trail's own delivered log files directly, where the
+    # matching PutObject record is present. That's the only reliable
+    # source for a data event, so read from there instead.
+    import gzip
+
+    bucket = cloudtrail.describe_trails(trailNameList=["condor-trail"])["trailList"][0][
+        "S3BucketName"
+    ]
+    prefix = f"AWSLogs/{ACCOUNT_ID}/CloudTrail/{REGION}/{since.strftime('%Y/%m/%d')}"
+    keys = [
+        o["Key"]
+        for o in s3.list_objects_v2(Bucket=bucket, Prefix=prefix).get("Contents", [])
+        if o["LastModified"] >= since
+    ]
+    matches = []
+    for key in keys:
+        body = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
+        records = json.loads(gzip.decompress(body))["Records"]
+        matches.extend(
+            r
+            for r in records
+            if r["eventName"] == event_name
+            and r.get("userIdentity", {}).get("userName") == username
+        )
+    return matches
+
+
 @check("AK-COV-01")
 def _(item, refs):
     # expect.status=access_denied describes the not-yet-built dp-collector role, not condor-bootstrap.
@@ -466,18 +496,23 @@ def _(item, refs):
 
 @check("AK-PIP-03")
 def _(item, refs):
-    events = cloudtrail.lookup_events(
-        LookupAttributes=[{"AttributeKey": "Username", "AttributeValue": "dev.maria"}],
-        MaxResults=20,
-    )["Events"]
+    history_start = datetime.fromisoformat(
+        json.loads(HISTORY_START_PATH.read_text())["history_start"].replace(
+            "Z", "+00:00"
+        )
+    )
+    matches = trail_data_events("PutObject", "dev.maria", history_start)
     matches = [
-        e
-        for e in events
-        if e["EventName"] == "PutObject" and e["EventSource"] == "s3.amazonaws.com"
+        m
+        for m in matches
+        if any(
+            r.get("ARN", "").endswith("pagos/terraform.tfstate")
+            for r in m.get("resources", [])
+        )
     ]
     return (
         len(matches) >= 1,
-        f"{len(matches)} CloudTrail S3 PutObject events for dev.maria (tfstate write)",
+        f"{len(matches)} trail PutObject data events for dev.maria on pagos/terraform.tfstate",
     )
 
 
@@ -593,7 +628,7 @@ def _(item, refs):
 @check("AK-INF-08")
 def _(item, refs):
     live = rds.describe_db_cluster_parameters(
-        DBClusterParameterGroupName="condor-pagos-params"
+        DBClusterParameterGroupName="condor-pagos-params", Source="user"
     )["Parameters"]
     max_conn = next(p for p in live if p["ParameterName"] == "max_connections")
     live_drifted = max_conn["ParameterValue"] == "200"
@@ -618,6 +653,8 @@ def _(item, refs):
             "-target=aws_rds_cluster_parameter_group.pagos",
             "-detailed-exitcode",
             "-input=false",
+            "-var",
+            "condor_account_id=337058058699",
         ],
         capture_output=True,
         check=False,

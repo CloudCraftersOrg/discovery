@@ -23,6 +23,7 @@ CREDS=$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$SEC
 DEV_MARIA_KEY=$(echo "$CREDS" | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_key_id"])')
 DEV_MARIA_SECRET=$(echo "$CREDS" | python3 -c 'import json,sys; print(json.load(sys.stdin)["secret_access_key"])')
 
+unset AWS_SESSION_TOKEN
 export AWS_ACCESS_KEY_ID="$DEV_MARIA_KEY"
 export AWS_SECRET_ACCESS_KEY="$DEV_MARIA_SECRET"
 export AWS_DEFAULT_REGION="$REGION"
