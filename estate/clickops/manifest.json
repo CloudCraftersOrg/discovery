@@ -124,6 +124,66 @@
       "kind": "ec2-instance",
       "id": "i-0dd68a2ee63fa31e3",
       "app": "facturacion"
+    },
+    {
+      "kind": "iam-user",
+      "id": "dev.juan",
+      "app": "inventario"
+    },
+    {
+      "kind": "iam-access-key",
+      "id": "AKIAU46RZ2HF55TGJNP5",
+      "app": "inventario"
+    },
+    {
+      "kind": "secretsmanager-secret",
+      "id": "condor/harness/dev-juan",
+      "app": "inventario"
+    },
+    {
+      "kind": "ecr-repository",
+      "id": "condor-inventario",
+      "app": "inventario"
+    },
+    {
+      "kind": "postgres-role",
+      "id": "inventario_ro",
+      "app": "inventario"
+    },
+    {
+      "kind": "secretsmanager-secret",
+      "id": "condor/inventario/db",
+      "app": "inventario"
+    },
+    {
+      "kind": "ecs-cluster",
+      "id": "condor-inventario",
+      "app": "inventario"
+    },
+    {
+      "kind": "iam-role",
+      "id": "condor-inventario-execution-role",
+      "app": "inventario"
+    },
+    {
+      "kind": "log-group",
+      "id": "/condor/inventario",
+      "app": "inventario"
+    },
+    {
+      "kind": "security-group",
+      "id": "sg-0eb8727238f614621",
+      "app": "inventario"
+    },
+    {
+      "kind": "ecs-task-definition",
+      "id": "condor-inventario",
+      "app": "inventario"
+    },
+    {
+      "kind": "ecs-service",
+      "id": "condor-inventario",
+      "app": "inventario"
     }
   ]
 }
