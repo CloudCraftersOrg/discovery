@@ -3,3 +3,4 @@
 {"ts": "2026-09-22T15:56:47Z", "app": "tienda", "kind": "expected_deploy_fail", "repo": "condor-tienda", "sha": "3406f3d127340456d7a29336c1bc1bfe5e1cdc1b", "note": "round-robin index 0"}
 {"ts": "2026-09-22T15:59:56Z", "app": "inventario", "kind": "manual_push", "repo": "condor-inventario", "sha": "761ff2e6c1f52b5ec5c02f96901fa54f0eb23a1d", "note": "dev.juan build+push :latest, force-new-deployment (PLANTED: AK-PIP-02)"}
 {"ts": "2026-09-22T18:22:55Z", "app": "pagos", "kind": "expected_deploy_fail", "repo": "condor-pagos", "sha": "71a40f99f347808c27bd3d639ecfa5cfe43440bc", "note": "round-robin index 1"}
+{"ts": "2026-09-22T19:10:31Z", "app": "pagos", "kind": "fix", "repo": "condor-pagos", "sha": "f9dcd57712eb45243df76f6427dbfb88b7155b16", "note": "FAIL_DEPLOY marker removed manually, ahead of the harness round-robin (PR #15 on condor-pagos)"}
