@@ -33,7 +33,7 @@
     },
     "pagos": "condor-pagos",
     "promo-2024-instance": "i-04e006ee373284653",
-    "reportes-worker": "i-0483548636c867dab",
+    "reportes-worker": "i-04cd45039dcc8f370",
     "tienda-codebuild-role": "condor-tienda-CodeBuildRole-moCnUyL6rfAP"
   }
 }

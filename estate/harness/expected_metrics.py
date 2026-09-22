@@ -126,7 +126,7 @@ COMPLETED_AT = {
 
 
 def app_metrics(app, entries, refs):
-    app_entries = [e for e in entries if e["app"] == app]
+    app_entries = [e for e in entries if e.get("app") == app]
     deploys = [e for e in app_entries if e["kind"] in DEPLOY_KINDS]
     failures = [e for e in app_entries if e["kind"] in FAILURE_KINDS]
     total_attempts = len(deploys) + len(failures)
