@@ -215,7 +215,7 @@ docker push "${REPO}:latest"
 
 echo "== register rev 2 + update service, still as dev.juan =="
 aws ecs register-task-definition --cli-input-json file:///tmp/inventario-taskdef.json --region "$REGION" >/dev/null
-aws ecs update-service --cluster condor-inventario --service-name condor-inventario \
+aws ecs update-service --cluster condor-inventario --service condor-inventario \
   --task-definition condor-inventario --force-new-deployment --region "$REGION" >/dev/null
 
 export AWS_ACCESS_KEY_ID="$SAVED_AWS_ACCESS_KEY_ID"
