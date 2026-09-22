@@ -40,12 +40,14 @@ cleanup() {
 }
 trap cleanup EXIT
 
+unset AWS_SESSION_TOKEN
 export AWS_ACCESS_KEY_ID="$DEV_MARIA_KEY"
 export AWS_SECRET_ACCESS_KEY="$DEV_MARIA_SECRET"
 export AWS_DEFAULT_REGION="$REGION"
 
 terraform -chdir="$PAGOS_DIR" init -input=false -reconfigure
-terraform -chdir="$PAGOS_DIR" apply -auto-approve -target=aws_eks_node_group.pagos
+terraform -chdir="$PAGOS_DIR" apply -auto-approve -target=aws_eks_node_group.pagos \
+  -var condor_account_id=337058058699
 
 unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_DEFAULT_REGION
 
