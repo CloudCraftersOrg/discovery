@@ -1,1 +1,39 @@
-{"network":{"app_subnet_ids":["subnet-07d4eaa7178b102dd","subnet-053689a1cf888e29e"],"data_subnet_ids":["subnet-02b7561a77438d544","subnet-001d9972cfc671e7e"],"hosted_zone_id":"Z10047152ET2OKEP623WQ","nat_public_ip":"34.203.116.239","promo_subnet_id":"subnet-0ac2fbbc772bd2a34","public_subnet_ids":["subnet-023ad90c22a8ec4ba","subnet-02400789caafdbc7c"],"reserved_platform_cidr":"10.20.128.0/18","vpc_id":"vpc-06f069857cd5a3612"}}
+{
+  "network": {
+    "app_subnet_ids": [
+      "subnet-07d4eaa7178b102dd",
+      "subnet-053689a1cf888e29e"
+    ],
+    "data_subnet_ids": [
+      "subnet-02b7561a77438d544",
+      "subnet-001d9972cfc671e7e"
+    ],
+    "hosted_zone_id": "Z10047152ET2OKEP623WQ",
+    "nat_public_ip": "34.203.116.239",
+    "promo_subnet_id": "subnet-0ac2fbbc772bd2a34",
+    "public_subnet_ids": [
+      "subnet-023ad90c22a8ec4ba",
+      "subnet-02400789caafdbc7c"
+    ],
+    "reserved_platform_cidr": "10.20.128.0/18",
+    "vpc_id": "vpc-06f069857cd5a3612"
+  },
+  "resource_refs": {
+    "JENKINS_HOME": "vol-08612a0bc23f52aff",
+    "condor-gh-runner": "i-0be1536580fec4340",
+    "condor-inventario ECR repo": "arn:aws:ecr:us-east-1:337058058699:repository/condor-inventario",
+    "condor-jenkins": "i-0ae74530e5a3de00d",
+    "condor-jenkins credential store": "http://10.20.10.120:8080",
+    "condor-jenkins-instance-profile": "arn:aws:iam::337058058699:instance-profile/condor-jenkins-instance-profile",
+    "condor-pagos-db": "arn:aws:rds:us-east-1:337058058699:cluster:condor-pagos-db",
+    "condor-tienda-db": "arn:aws:rds:us-east-1:337058058699:db:condor-tienda-db",
+    "denied_region_canary": {
+      "parameter_name": "/condor/canary",
+      "region": "sa-east-1"
+    },
+    "pagos": "condor-pagos",
+    "promo-2024-instance": "i-04e006ee373284653",
+    "reportes-worker": "i-0483548636c867dab",
+    "tienda-codebuild-role": "condor-tienda-CodeBuildRole-moCnUyL6rfAP"
+  }
+}
