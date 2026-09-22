@@ -108,7 +108,7 @@ Resolve versions at execution time (EKS, Jenkins LTS, AMIs, providers). Record w
 **Raw record envelope** — every collector writes JSON Lines, gzip:
 
 ```
-raw/domain=<infra|apps|pipelines>/source=<collector>/run_id=<ulid>/region=<region>/part-<n>.jsonl.gz
+raw/engagement=<slug>/run_id=<ulid>/domain=<infra|apps|pipelines>/source=<collector>/account=<account_id>/region=<region>/part-<n>.jsonl.gz
 ```
 
 Each line:
@@ -132,6 +132,8 @@ Each line:
 ```
 
 `record_kind=coverage` is how a collector reports what it could not reach, with `payload.reason` one of `access_denied`, `not_found`, `unreachable`, `throttled`, `unsupported`.
+
+`engagement` is `condor` in this repository and a client slug elsewhere; `account` is the 12-digit account the record was collected *from*, which is not always the account the platform runs in. Both partitions have cardinality 1 here and are the difference between a pruned query and a full scan at a client. Ordering is by how queries filter: engagement and run first, account and region deep.
 
 **Confidence ladder for grouping** (fixed, do not change):
 
