@@ -1,158 +1,173 @@
 # Onboarding — Santiago, Jenkins discovery
 
-Scope: `P2-15` (the Jenkins collector), plus enough of its neighbors
-(`P2-16`'s `jenkinsfile`/`jenkins_config_xml` parsers, `P2-17`'s
-source-traceability tests) to know what your output feeds into.
+**Repo: `CloudCraftersOrg/ai-discovery-tool`, not this one.** The framework
+this originally pointed at (`P2-07`'s `dp_collect` package, `platform/
+collectors/pipelines/jenkins/`) never got built in `discovery` — instead,
+Alejandro built a full, more general version of this whole platform solo,
+in `ai-discovery-tool`, in about 24 hours. Read this doc, then go work
+there. `discovery` (this repo) is now a **reference**: its task files still
+describe exactly what a Jenkins collector needs to do, they just get
+implemented somewhere else.
 
 You're pulling **evidence about Jenkins**, from Jenkins — jobs, builds,
-plugins, credential references — read-only, into the platform's raw
-storage. You are not touching the Jenkins controller itself, and you are
-not writing anything back to it.
+plugins, credential references — read-only, into the platform's evidence
+store. You are not touching the Jenkins controller itself, and you are not
+writing anything back to it.
 
-## Before you write any code
+## The one thing to resolve before anything else
 
-1. Read `CLAUDE.md` in full, especially §4 ("the estate is a fixture,
-   defects are intentional") and §9 ("things agents commonly get wrong
-   here"). Two lines there are written almost exactly for your task:
-   *"Treating the Jenkins controller or the GitHub runner as part of an
-   application. They are shared platform tooling."* and *"Fixing a
-   planted defect 'for security.' Breaks the answer key."*
-2. Read `docs/ARCHITECTURE.md` — it has the real topology and the exact
-   role Jenkins plays: CI for Tienda, Pagos and Reportes, plus
-   Facturación's nightly export job. `docs/DISCOVERY-CHECKLIST.md` lists
-   every answer-key item your collector is on the hook for as an evidence
-   source (search it for `jenkins`).
-3. `condor-jenkins` is real and running right now:
-   `http://jenkins.condor.internal:8080`, inside `condor-vpc`. Nothing
-   about it is simulated — the plugin versions, the credentials store,
-   the job configs are genuine. Ask Diego for the access brief (AWS
-   Identity Center invite + the SSM tunnel steps) so you can poke around
-   in the real controller before writing the collector.
+**As of right now, the `condor` engagement has `network_mode = "none"`**
+(`terraform/10-network/engagements/condor.tfvars` in `ai-discovery-tool`) —
+meaning the collector currently has **no network path into `condor-vpc` at
+all**. `jenkins.condor.internal` is a VPC-private DNS name, same as every
+other estate hostname (see `docs/ARCHITECTURE.md`'s "Reaching the apps"
+section) — a Lambda outside that VPC cannot resolve or reach it, full stop.
 
-## Your task, exactly
+This is different from what the old `discovery`-repo plan assumed: it took
+for granted the collector Lambda would already be inside `condor-vpc`
+(`ADR-044`, "one VPC"). `ai-discovery-tool` is a genuinely different
+product — designed to reach *any* client's estate through one cross-account
+role, not built inside Condor's own VPC — so that assumption doesn't carry
+over automatically. GitHub reachability doesn't need this (it's a public
+API over the internet); **Jenkins does**, and so would anything else that
+depends on `condor-vpc`'s private DNS.
 
-`P2-15`, domain `pipelines`, base URL `http://jenkins.condor.internal:8080`,
-auth token from Secrets Manager path `dp/jenkins/reader` (this gets
-created by `P2-04`, owned by Oscar — **you're blocked on live testing
-until that lands**, though nothing stops you writing the collector logic
-and its offline unit tests first, see below).
+Concretely, someone needs to either flip `network_mode` to `managed` (and
+peer or PrivateLink into `condor-vpc`) or `existing` (pointing at
+`condor-vpc`'s own subnets directly) before your collector can be tested
+against the real controller. Read `SPEC.md` §6 first, then raise this with
+Alejandro and Oscar — it affects Oscar's `20-data`/Aurora work too (Aurora
+needs a VPC), so it's likely already on someone's list, but confirm rather
+than assume. **Don't try to solve the networking yourself** — that's
+`terraform/10-network`, not your collector.
 
-What to collect:
+None of this blocks writing the collector itself — see below.
+
+## What already exists for you, unblocked, right now
+
+Unlike the old plan (which had you waiting on a `P2-07` framework that
+didn't exist yet), `ai-discovery-tool`'s framework is **already built and
+working**:
+
+- `runtime/dp/evidence.py` — `Envelope`, `coverage()`, `EvidenceWriter`,
+  `new_run_id()`. This is what you write records through.
+- `runtime/dp/redact.py` — redaction rules for secrets, already covers AWS
+  keys, GitHub tokens, private keys, JWTs, connection-string passwords,
+  generic `password=`/`token=` assignments. Run anything Jenkins-adjacent
+  through this before writing it — credential *values* must never reach
+  evidence, only IDs/types/descriptions.
+- `runtime/collector/handler.py` — the entrypoint. Right now
+  `IMPLEMENTED = {"census", "traces"}`; Jenkins is one of ~34 collectors
+  still to add, declared in `discovery`'s `docs/contracts/collectors.yaml`
+  as `jenkins` (`domain: pipelines`, `cadence: hourly`, `regional: false`).
+
+The pattern is a plain Python function, not a class hierarchy — copy the
+shape of `collect_census`/`collect_traces` already in `handler.py`:
+
+```python
+def collect_jenkins(item, writer, engagement, run_id, account, region, session):
+    try:
+        # httpx, not boto3 - Jenkins is an HTTP API behind a token, same as GitHub
+        ...
+        writer.write(Envelope(..., source="jenkins", record_kind="resource", payload={...}))
+    except Exception as exc:  # noqa: BLE001
+        writer.write(coverage(engagement, run_id, "jenkins", account, region,
+                              "jenkins:<what failed>", _reason(exc), str(exc)[:400],
+                              lost="..."))
+```
+
+Then register it: `COLLECTORS["jenkins"] = collect_jenkins`,
+`IMPLEMENTED.add("jenkins")`. `_reason()` is already in `handler.py` — reuse
+it, don't write a second exception classifier.
+
+## What to actually collect — unchanged from the original spec
+
+`discovery`'s `tasks/P2-15.md` is still the exact behavioral reference.
+Base URL `http://jenkins.condor.internal:8080`:
 
 - **Controller**: version from the `X-Jenkins` response header; nodes and
   executors from `/computer/api/json`; plugins from
   `/pluginManager/api/json?depth=1` (short name, version, active).
 - **Plugin advisories**: fetch
-  `https://updates.jenkins.io/update-center.actual.json` (through the
-  platform's egress path, `P2-02` — not yours, but your Lambda's outbound
-  traffic depends on it existing), match installed versions against its
-  `warnings` entries, emit one `resource` record per match. This is the
-  live evidence behind `AK-PIP-10` (matrix-auth 3.2.9 has a real
-  advisory, pinned on purpose — see `estate/iac/jenkins/` for why).
+  `https://updates.jenkins.io/update-center.actual.json`, match installed
+  versions against its `warnings` entries, one record per match. This is
+  live evidence for `AK-PIP-10` — matrix-auth 3.2.9 has a real advisory,
+  pinned on purpose (see `discovery`'s `estate/iac/jenkins/` for why).
 - **Jobs**: `/api/json?tree=jobs[name,url,_class,jobs[name,url,_class]]`,
   recursive for multibranch. Pull `config.xml` per job.
-- **Builds since checkpoint**: `number`, `result`, `timestamp`,
-  `duration`, `causes`, and the SCM revision SHA out of `actions`
-  (`lastBuiltRevision`). Use `ctx.checkpoint` (from the `dp_collect`
-  framework, `P2-07`) so re-runs only pull new builds.
-- **Credentials**: IDs, types, descriptions from the credentials API —
-  **no secret fields, ever**. If the plugin won't expose even that
-  without admin rights, emit a `coverage` record with
-  `reason=access_denied` and move on; that's a valid, expected outcome,
-  not a bug to work around.
-- **Jenkinsfile**: for multibranch jobs, record which repo/branch backs
-  it. Don't fetch file contents — the GitHub collector already has those.
-- **Unreachable controller**: emit `coverage` with `reason=unreachable`
-  and **succeed anyway**. A down Jenkins should never fail the whole
-  collection cycle.
+- **Builds since checkpoint**: `number`, `result`, `timestamp`, `duration`,
+  `causes`, SCM revision SHA from `actions` (`lastBuiltRevision`). There's
+  no `ctx.checkpoint` helper here the way the old plan assumed — check
+  `runtime/dp/` for an equivalent, or ask Alejandro whether checkpointing
+  is handled by the run ledger (`dp-run-ledger` / DynamoDB) instead.
+- **Credentials**: IDs, types, descriptions only — **never secret fields**.
+  If the plugin won't expose even that without admin rights, emit
+  `coverage` with `reason=access_denied` and move on.
+- **Jenkinsfile**: for multibranch jobs, record which repo/branch backs it.
+  Don't fetch file contents — the GitHub collector already has those.
+- **Unreachable controller**: `coverage` with `reason=unreachable`,
+  **succeed anyway**. A down Jenkins should never fail the whole run — this
+  matters even more now that network reachability itself is an open
+  question (see above): until it's resolved, this is the path your
+  collector will actually take every time it's invoked.
 
-Acceptance, concretely: two jobs found; `facturacion-nightly-export`'s
-`config.xml` present and contains `ssm send-command` (this is the
-planted "no source repo, defined only in Jenkins" finding, `AK-PIP-07`);
-at least one plugin warning matched; builds since `history_start` present.
-Unit tests with recorded JSON/XML fixtures, including the unreachable
-path.
+Acceptance, concretely, once live: two jobs found;
+`facturacion-nightly-export`'s `config.xml` present and contains
+`ssm send-command` (the planted "no source repo, defined only in Jenkins"
+finding, `AK-PIP-07`); at least one plugin warning matched; builds since
+`history_start` present.
 
-## What you're blocked on, and what you can do meanwhile
+## Credentials
 
-`P2-15` formally depends on `P2-07` (the `dp_collect` collector
-framework — base class, session/pagination/checkpoint helpers, the
-redaction pipeline, the writer), `P2-03` (private network path to the
-estate — already mostly solved by ADR-044, since there's one VPC now,
-not a peered pair), `P2-02` (egress for the plugin-advisory fetch), and
-`P2-04` (the `dp/jenkins/reader` token, owned by Oscar).
+The old plan had a token at Secrets Manager path `dp/jenkins/reader`,
+created by a task (`P2-04`) that never got built as such. Check whether
+`ai-discovery-tool` already has an equivalent secret path wired (look in
+`terraform/30-collect/iam.tf` and `client-grant/` for a Jenkins-shaped
+credential grant) — if not, that's a real gap to raise, not something to
+work around by hardcoding a token.
 
-None of those are done yet (check `tasks/STATUS.md`). Until they are,
-you can still make real progress:
+## What you can do before the network question is resolved
 
-- Read `tasks/P2-07.md` now — it defines the exact `Collector` base
-  class interface (`domain`, `name`, `version`, `regional`, `collect(ctx)
-  -> Iterator[Record]`) you'll subclass. Write against that interface
-  even before the framework package exists; you'll wire it up once it
-  lands.
-- Hit Jenkins's real API by hand (`curl`, or a throwaway script) through
-  an SSM tunnel to record realistic JSON/XML fixtures now — you don't
-  need the collector framework to *look at* what the controller actually
-  returns.
-- Write the redaction-adjacent thinking now: the credentials API's shape,
-  and confirm empirically whether it exposes ID/type/description without
-  admin rights, or whether you'll be emitting `access_denied` coverage
-  for that whole record kind.
+- Write `collect_jenkins` and register it — it'll just always take the
+  `unreachable` coverage path until the network exists, which is correct,
+  honest behavior, not a bug.
+- Write offline unit tests with recorded JSON/XML fixtures — follow
+  `runtime/tests/test_handlers.py`'s style. Pull real fixtures by hand
+  (`curl` through an SSM tunnel — ask Diego for the access brief) so
+  they're accurate to the real controller, not invented.
+- Confirm empirically whether the credentials API exposes ID/type/
+  description without admin rights, so you know now whether you'll be
+  emitting `access_denied` coverage for that whole record kind later.
 
-## The one thing worth understanding early: `P2-16`
+## Rules that still apply, unchanged
 
-You're not building `P2-16` (it's a separate task, Product stream, not
-yours), but it consumes your collector's raw output directly. Its
-`jenkinsfile` and `jenkins_config_xml` parsers turn what you collect into
-structured `DeployIntent` records — mechanism (`codedeploy`, `helm`,
-`ssm_command`, …), credential mode, whether there's an approval gate.
-They're **pattern-based, never evaluating Groovy** — a deliberate
-constraint, not a shortcut: don't be tempted to make your own collector
-smarter about parsing Jenkinsfile semantics, that logic belongs in
-`P2-16`, over on the raw text you hand it. Your job stops at faithful,
-complete, redacted evidence.
+- **Read-only, no exceptions.** Never use the collector's own path to do
+  anything that could be mistaken for a control action (triggering a
+  build, etc.) — use your own access for that kind of poking around.
+- **Never log or store a secret value.** Evidence is Object Lock-protected
+  once written — there's no delete path — so redaction has to happen
+  before `writer.write()`, never after.
+- **Don't "fix" anything you find weird in the real Jenkins.** The
+  outdated matrix-auth plugin, the admin-role-holding CodeBuild role, the
+  no-approval-gate Reportes pipeline, the Jenkins-only nightly export with
+  no backing repo — all planted, all intentional evidence your collector
+  exists to surface. Check `discovery`'s `answer-key/answer-key.yaml`
+  before assuming something's broken.
 
-Estate fixtures `P2-16` is graded against, for context on what your
-collector needs to make visible: Reportes should parse to `codedeploy`
-with `instance_profile`, `has_approval=false`, `has_test_stage=false` —
-that's the real, planted "no approval before deploy" finding
-(`AK-PIP-06`). If your collector doesn't surface enough of the
-Jenkinsfile/job structure for that to be derivable downstream, it's a gap
-in `P2-15`, not `P2-16`.
+## Coordination
 
-## Rules that apply specifically to you
+1. **The network question above is the real blocker — raise it early**,
+   with Alejandro and Oscar both, since it likely affects Oscar's Aurora
+   work too.
+2. **Diego and Alejandro are splitting the other ~33 collectors** — confirm
+   you're not duplicating effort, and that nobody else has started
+   `jenkins` already.
+3. Talk to Alejandro before your first PR regardless — he has context on
+   the framework (like the checkpoint question above) that isn't fully
+   written down yet.
 
-- **Read-only, no exceptions.** The `dp-collector` role literally cannot
-  write to Jenkins (least-privilege by IAM, not by your own restraint) —
-  but even reads that could be mistaken for control-plane actions (like
-  triggering a build to see what happens) are out of scope. If you need
-  to understand Jenkins's behavior, use your own testing/admin access —
-  never the collector's.
-- **Never log or store a secret value** — this one has an actual
-  enforcement mechanism (`dp_collect.redact`, from `P2-07`): every
-  detector runs across every string value in every record before it's
-  written, and raw storage is Object Lock-protected, so a secret that
-  slips through can never be deleted afterward. Treat that as the reason
-  the credentials-API rule above is absolute, not just a guideline.
-- **Don't "fix" anything you find weird in Jenkins.** The outdated
-  matrix-auth plugin, the admin-role-holding CodeBuild role, the
-  no-approval-gate Reportes pipeline, the Jenkins-only nightly export
-  with no backing repo — all planted, all intentional, all things your
-  collector exists to surface, not resolve. Check
-  `answer-key/answer-key.yaml` before assuming something's broken.
+## Testing
 
-## Definition of done (CLAUDE.md §8, same bar as every task)
-
-Acceptance commands pass, output pasted in the PR. `ruff check`/
-`ruff format --check` pass. No secret values anywhere — code, logs,
-fixtures, PR text. `PLANTED:` markers referenced where relevant.
-Answer-key items you touch (`AK-PIP-04`, `AK-PIP-06`, `AK-PIP-07`,
-`AK-PIP-10`, `AK-DEP-03` at least) named by ID in the PR.
-`tasks/STATUS.md` updated.
-
-## Where things live
-
-Your code: `platform/collectors/pipelines/jenkins/`. Fixtures:
-`tests/fixtures/` under that path, JSON/XML, at least the two positive
-cases plus the unreachable-controller case. Read `platform/collectors/README.md`
-for the framework's general conventions once `P2-07` lands.
+`make check` in `ai-discovery-tool` (fmt, validate, offline tests, policy)
+— no AWS credentials needed for any of it except the parts you can't test
+until the network question above is resolved.
