@@ -466,7 +466,19 @@ def _(item, refs):
 
 @check("AK-PIP-03")
 def _(item, refs):
-    return None, "dev.maria's laptop-apply hasn't happened yet - P1-13"
+    events = cloudtrail.lookup_events(
+        LookupAttributes=[{"AttributeKey": "Username", "AttributeValue": "dev.maria"}],
+        MaxResults=20,
+    )["Events"]
+    matches = [
+        e
+        for e in events
+        if e["EventName"] == "PutObject" and e["EventSource"] == "s3.amazonaws.com"
+    ]
+    return (
+        len(matches) >= 1,
+        f"{len(matches)} CloudTrail S3 PutObject events for dev.maria (tfstate write)",
+    )
 
 
 @check("AK-PIP-04")
@@ -580,7 +592,46 @@ def _(item, refs):
 
 @check("AK-INF-08")
 def _(item, refs):
-    return None, "dev.maria's console drift hasn't happened yet - P1-13"
+    live = rds.describe_db_cluster_parameters(
+        DBClusterParameterGroupName="condor-pagos-params"
+    )["Parameters"]
+    max_conn = next(p for p in live if p["ParameterName"] == "max_connections")
+    live_drifted = max_conn["ParameterValue"] == "200"
+
+    subprocess.run(
+        [
+            "terraform",
+            f"-chdir={ROOT}/estate/iac/pagos",
+            "init",
+            "-input=false",
+            "-reconfigure",
+        ],
+        capture_output=True,
+        check=True,
+        timeout=60,
+    )
+    plan = subprocess.run(
+        [
+            "terraform",
+            f"-chdir={ROOT}/estate/iac/pagos",
+            "plan",
+            "-target=aws_rds_cluster_parameter_group.pagos",
+            "-detailed-exitcode",
+            "-input=false",
+        ],
+        capture_output=True,
+        check=False,
+        timeout=60,
+    )
+    plan_shows_drift = plan.returncode == 2
+
+    return (
+        live_drifted and plan_shows_drift,
+        (
+            f"live max_connections={max_conn['ParameterValue']} (want 200), "
+            f"terraform plan detailed-exitcode={plan.returncode} (2 = drift)"
+        ),
+    )
 
 
 @check("AK-DEC-01")
