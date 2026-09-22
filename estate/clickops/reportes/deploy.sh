@@ -167,8 +167,32 @@ cat > /tmp/reportes-worker-userdata.sh <<'USERDATA'
 #!/bin/bash
 systemctl stop amazon-ssm-agent
 systemctl disable amazon-ssm-agent
-echo "* * * * * root curl -s -o /dev/null http://reportes.condor.internal/report" > /etc/cron.d/reportes-worker
-chmod 644 /etc/cron.d/reportes-worker
+
+# cron.d alone silently never fires here - AL2023's base AMI doesn't ship
+# cronie, so nothing ever reads /etc/cron.d. A systemd timer needs no
+# extra package (confirmed live, P1-16 - the original cron.d version
+# never produced a single request in its first 24h).
+cat > /etc/systemd/system/reportes-worker.service <<'UNIT'
+[Unit]
+Description=condor-reportes worker request
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -s -o /dev/null http://reportes.condor.internal/report
+UNIT
+cat > /etc/systemd/system/reportes-worker.timer <<'UNIT'
+[Unit]
+Description=Run reportes-worker every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now reportes-worker.timer
 USERDATA
 WORKER_ID=$(aws ec2 run-instances --region "$REGION" \
   --image-id "$WORKER_AMI" --instance-type t3.micro \

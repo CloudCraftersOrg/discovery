@@ -1,0 +1,27 @@
+{
+  "history_start": "2026-09-22T10:28:11Z",
+  "generated_at": "2026-09-22T16:31:23.148266Z",
+  "apps": {
+    "tienda": {
+      "deploy_frequency_per_day": 0.0,
+      "deploy_count": 0,
+      "change_failure_rate": 1.0,
+      "lead_time_hours": null,
+      "lead_time_samples": 0
+    },
+    "pagos": {
+      "deploy_frequency_per_day": 0.0,
+      "deploy_count": 0,
+      "change_failure_rate": 0.0,
+      "lead_time_hours": null,
+      "lead_time_samples": 0
+    },
+    "reportes": {
+      "deploy_frequency_per_day": 0.0,
+      "deploy_count": 0,
+      "change_failure_rate": 0.0,
+      "lead_time_hours": null,
+      "lead_time_samples": 0
+    }
+  }
+}
