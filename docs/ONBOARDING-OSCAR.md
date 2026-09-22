@@ -1,114 +1,100 @@
-# Onboarding — Oscar, Platform Services infra
+# Onboarding — Oscar, platform infra
 
-Scope: the "Platform services" box (data stores, orchestration, analytics,
-access/AWS-insight) — regional, outside `condor-vpc`. Eight tasks:
-`P2-01`, `P2-04`, `P2-06`, `P3-01`, `P3-03`, `P4-01`, `P4-11`, `P5-02`.
+**Repo: `CloudCraftersOrg/ai-discovery-tool`, not this one.** Everything
+below was originally scoped against `discovery`'s own `platform/`
+scaffolding and `tasks/P2-01`/`P2-04`/`P2-06`/`P3-01`/`P3-03`/`P4-01`/
+`P4-11`/`P5-02` — that track is superseded. Alejandro built a full,
+general-purpose (not Condor-specific) version of this platform solo, in
+`ai-discovery-tool`, in about 24 hours. Read this doc, then go work there.
 
-Everything here is Phase 2+ (the discovery platform itself), not the
-Condor estate. **Do not touch anything under `estate/`** — see the
-"commonly get wrong" list below, it's not optional.
+`discovery` (this repo) is now a **reference**, not where you build: its
+`docs/contracts/`, `answer-key/answer-key.yaml`, and `docs/ARCHITECTURE.md`
+describe the Condor estate that `ai-discovery-tool` will run its first real
+collection against (`ENGAGEMENT=condor`).
 
-## Before you write any Terraform
+## Start here, in `ai-discovery-tool`
 
-1. Read `CLAUDE.md` in full — it's short, and sections 3–9 are the actual
-   rules this whole repo runs on, not background.
-2. Read `docs/adr/ADR-044-network-consolidation.md` and
-   `ADR-045-bootstrap-identity.md` first. They already answer questions
-   you'll otherwise re-derive: there is one VPC (`condor-vpc`), not two —
-   the platform gets its own subnets inside it, not a peered VPC — and
-   `dp-deployer` (your apply identity, parallel to the estate's
-   `condor-bootstrap`) doesn't exist yet. Building it is implicitly your
-   first real step, before `P2-01` can apply.
-3. Confirm what's actually done vs. still `todo` in `tasks/STATUS.md`
-   before starting each task — it's the single source of truth, not this
-   doc, which will drift.
-4. `platform/` already has real content: `platform/db/migrations/0001_init.sql`
-   and its test (from `P2-05`, done) — the canonical Postgres schema your
-   later tasks (`P4-01`) build on. Skim it before `P3-03`/`P4-01` so your
-   Iceberg table schemas and Aurora migrations don't diverge from it.
+1. `README.md`, then `SPEC.md` §4 (deployment model), §5 (Terraform
+   structure), §6 (network), §8 (data), §9 (security) — those five cover
+   almost everything your original eight tasks touched.
+2. `make check` locally (`fmt-check`, `validate`, offline tests, `policy`
+   — Checkov) — no AWS credentials needed, and it's what CI runs on every
+   PR.
+3. `runbook/first-run.md` — the two things only a human can do before
+   anything applies: set the `ENGAGEMENT` repo variable, upload
+   engagement-specific tfvars (not committed — they carry account IDs and
+   ARNs, kept out of git on purpose).
+4. Skim recent `git log` on `main` — nearly every commit past the initial
+   build is Alejandro finding and fixing a real bug on first contact with
+   live AWS (Aurora's minor-version pin, a `10-network` layer that could
+   never apply, IAM rejecting a wildcard in the action's service half, CI's
+   apply role not trusting its own environment). That's the actual shape of
+   the work left: **the code for all nine layers exists and validates;
+   very little of it has been proven against a real account.**
 
-## The eight tasks, in the order their dependencies force
+## Where your eight tasks actually live now
 
-| Order | Task | What | Depends on |
-|---|---|---|---|
-| 1 | `P2-01` | VPC `dp-discovery`... no — **one VPC**: platform subnets (`collector`, `data`, `firewall`, `nat`) inside `condor-vpc`. KMS keys, `dp-raw`/`dp-lake`/`dp-athena-results` S3, `dp-run-ledger`/`dp-checkpoints` DynamoDB. | `P1-01`, `P1-04` (done) |
-| 2 | `P2-04` | IAM role `dp-collector`, EKS access entry, GitHub App `dp-discovery-reader`, `dp/jenkins/reader` token | `P2-01`, `P1-07`, `P1-11`, `P1-05` (done) |
-| 3 | `P2-06` | Deploy-not-build: CID dashboards, License Manager configs, Well-Architected workload | `P1-03`, `P1-09` (done) |
-| 4 | `P3-01` | Step Functions `dp-sfn-ingest`, EventBridge schedules, the CUR-delivery trigger | `P2-17` (blocked on the whole collector set — see coordination note) |
-| 5 | `P3-03` | Glue database `dp_lake`, Iceberg tables, Athena workgroup `dp-analytics` | `P2-05` (done), `P2-01` |
-| 6 | `P4-01` | Aurora Serverless v2 `dp-canonical`, `dp-migrate` Lambda, the dbt image, `dp-sfn-resolve-enrich` | `P3-02`, `P2-05` |
-| 7 | `P4-11` | QuickSight dashboards as code, six of them | `P4-09`, `P3-06` |
-| 8 | `P5-02` | Validation workbook orchestration (outbox/inbox in `dp-lake`, Step Functions, escalation Lambda) | `P5-01` |
+| Your original task | What it covered | Where it lives in `ai-discovery-tool` |
+|---|---|---|
+| `P2-01` (network + storage base) | VPC, KMS, S3, DynamoDB | `terraform/10-network` + `terraform/20-data` — **both already built**: S3 `lake`/`athena_results` with lifecycle rules, Glue catalog, Athena workgroup, DynamoDB `run_ledger` |
+| `P2-04` (collector identities) | `dp-collector` IAM role, EKS access, GitHub App | `terraform/30-collect/iam.tf` — **already built**, and broader than the original plan: AWS-managed `SecurityAudit` + `ViewOnlyAccess` plus an explicit `NeverWriteToAnEstate` deny list as defense in depth |
+| `P2-06` (CID dashboards, License Manager, Well-Architected) | Deploy-not-build AWS services | **No clear home yet.** Not in any of the nine layers as far as I can find. Worth raising directly — it may be intentionally out of v1 scope (these are account-local AWS tools, and this product's whole model is reading *other* accounts through one granted role, which may be why it didn't carry over), or it may just not be built yet. Don't assume either way — ask Alejandro |
+| `P3-01` (orchestration) | Step Functions, EventBridge | `terraform/30-collect/statemachine.tf` (the collection fan-out, already built — Distributed Map over accounts × regions × collectors) and `terraform/40-process/statemachine.tf` (the process pipeline). SPEC §7.3–7.4 describes both in more depth than the original task did — read it, the run model changed: **triggered, not scheduled**, four named runs (`probe`, `baseline`, `window`, `refresh`) instead of cron cadences |
+| `P3-03` (lakehouse tables) | Glue, Athena, Iceberg | `terraform/20-data/main.tf` — Glue database and Athena workgroup exist. Whether the Iceberg table *schemas* (`stg_records`, `coverage`, `canonical_entity`, etc.) are actually created yet needs checking — I didn't find table-creation resources in what I read, only the database/workgroup shell |
+| `P4-01` (canonical store, dbt) | Aurora, migrations, dbt image | `terraform/20-data/aurora.tf` (Aurora PostgreSQL Serverless v2, **just fixed** — the version pin bug was real, see `git log`) + `terraform/40-process/main.tf` (dbt Lambda, snapshot Lambda, judgment-layer Lambda — all three already built) |
+| `P4-11` (dashboards) | QuickSight as code | Two different things exist and neither is clearly QuickSight yet: `terraform/60-console` is a **full custom web app** (Cognito, CloudFront, WAF) — the "Site" and "Console" product surfaces from SPEC §14, a different design than the original QuickSight plan. SPEC's own open question **Q5** asks whether Terraform should own QuickSight assets at all, or whether it's a human-authored, human-imported thing. This is unresolved — don't build QuickSight Terraform speculatively |
+| `P5-02` (validation orchestration) | Workbook outbox/inbox | `terraform/50-present` — delivery bucket with presigned in/out access, already built |
 
-**`P2-01` and `P2-04` are the two that block the most other people.**
-`P2-04` specifically is what Santiago's Jenkins collector (`P2-15`) needs
-before he can test against live Jenkins — his collector reads a token from
-`dp/jenkins/reader`, which your task creates. Tell him when it lands.
+## The real state of things
 
-`P3-01`, `P4-01`, `P4-11` and `P5-02` all sit late in their chains and
-depend on work outside this box (`P2-17`, `P3-02`, `P4-09`, `P3-06`,
-`P5-01`) — you'll be blocked waiting on other streams for those, not on
-yourself. `P2-01`, `P2-04`, `P2-06` and `P3-03` are the ones you can start
-and finish without waiting on anyone.
+Per `README.md`'s own status note (check it's not stale before trusting
+it): *"The nine layers, the client grant, the CI/CD and the app exist and
+validate. None of it has been applied to an AWS account."* That's slightly
+behind reality already — a recent commit shows `20-data` got through S3,
+Glue and Athena on a real apply before hitting the Aurora bug, now fixed.
+**Your job is mostly to continue that: apply layers in order, against the
+real sandbox account, and fix what breaks on first contact** — the same
+shape as every one of Alejandro's recent commits, not a from-scratch build.
 
-## Rules that are easy to break by accident
+**The AWS sandbox account is 337058058699, `us-east-1`** — the same
+account that hosts the whole Condor estate from `discovery`. Two real
+consequences: be careful never to touch estate resources with platform
+credentials (there's an IAM deny for this, but don't rely on it), and
+expect the estate's own resource footprint to be visible alongside
+whatever you apply — don't mistake an estate resource for something you
+created.
 
-From `CLAUDE.md` §5 and §9 — these aren't style preferences, several have
-acceptance tests that fail if you break them:
+## Rules that carry over unchanged
 
-- **Every platform resource gets `managed-by=discovery-platform` and
-  `dp-component=<component>` tags**, via provider `default_tags`. The
-  inverse — adding tags to an *estate* resource — breaks the estate's own
-  grouping tests. Two different Terraform states, two different tagging
-  rules, never mix them.
-- **The `dp-collector` role is read-only. Full stop.** Any write API
-  showing up in a collector (not your box, but adjacent) is treated as a
-  defect, not a feature.
-- **No workload subnet routes to an internet gateway.** `P2-01`'s own
-  acceptance check is a Terraform `check` block that fails the plan if a
-  `collector` or `data` route table ever gets a `0.0.0.0/0` route to the
-  IGW. All egress goes through Network Firewall (a different task,
-  `P2-02` — not yours, but your subnets are what it constrains).
-- **Never use `dp-deployer` to touch estate resources, or `condor-bootstrap`
-  to touch platform resources.** CloudTrail is how findings get
-  corroborated later; crossing the identities pollutes that evidence for
-  everyone.
-- **Don't fix a planted estate defect "for security."** If you're staring
-  at something in the estate that looks wrong while you're building a
-  collector or dashboard against it, it's very likely intentional — check
-  `answer-key/answer-key.yaml` before touching it. This is more Santiago's
-  risk than yours, but `P2-06`'s License Manager task pulls real data from
-  Facturación's deliberately-old SQL Server, so the same caution applies.
-- **Never sleep-loop waiting for AWS data to appear** (CUR delivery,
-  Compute Optimizer recommendations, CID dashboard provisioning all take
-  real hours-to-days). Use the `wait` gate pattern — see how `P1-16`
-  (`estate/verify/check_ready.py`) does it: build the check, run it, if
-  it's not ready print what's missing and stop. The operator re-runs it
-  later.
+Everything from the original CLAUDE.md-derived list still applies, just
+against `ai-discovery-tool`'s own layers instead of `platform/`:
 
-## Definition of done, every task (CLAUDE.md §8)
+- Least privilege, no wildcards beyond what a task explicitly names.
+- The collector role is read-only, full stop — any write API showing up
+  there is a defect, not a feature (this is now an actual IAM Deny in
+  `30-collect/iam.tf`, not just a convention).
+- Never fix a planted estate defect "for security" if your work brings you
+  into contact with Condor data (e.g. testing a `20-data` query against
+  real collected evidence).
+- Never sleep-loop waiting for AWS data — `discovery`'s own
+  `estate/verify/check_ready.py` is still the reference pattern for a
+  `wait`-gated check.
 
-Same bar for all eight: acceptance commands pass with output pasted in
-the PR; `ruff check`/`ruff format --check` and `terraform fmt -check`/
-`validate` pass; no secret values anywhere in code, logs, fixtures or PR
-text; `tasks/STATUS.md` updated; the PR states the new hourly cost (most
-of your tasks have an explicit cost limit — `P2-01` is $0.90/hr, mostly
-interface endpoints, state the count).
+## Definition of done
 
-## Where things live
+`make check` passes (fmt, validate, offline tests, policy). Terraform plan
+output and any live-apply findings go in the PR, matching the detail level
+of Alejandro's own commit messages — they explain the real failure and why
+the fix is correct, not just what changed. CI enforces PR-then-merge with
+required-reviewer approval on the apply role's trust policy itself, so
+there's no way to approve your own apply by editing the workflow file in
+the same PR.
 
-- Terraform: `platform/terraform/<area>/` (`base/`, `identity/`,
-  `aws-services/`, `orchestration/`, `lakehouse/`, `processing/`,
-  `validation/` — matches the `Paths` row in each task file).
-- State bucket: `dp-tfstate-<acct>`, entirely separate from the estate's
-  `condor-tfstate-<acct>`.
-- dbt: `platform/dbt/`. Quick dashboard definitions: `platform/quick/`.
-- Data contracts you should read before `P3-03`/`P4-01`:
-  `docs/contracts/raw-envelope.schema.json`, `canonical-model.md`.
+## Coordination
 
-## If you get stuck
-
-Read the task file itself first (`tasks/P2-01.md` etc.) — it's more
-detailed than this doc and is the actual spec. If a task's "Stop and ask
-if" condition (or `CLAUDE.md` §2's general one) applies, that's a real
-stop, not a suggestion to push through.
+**Talk to Alejandro before touching anything.** He built all nine layers
+solo in under 24 hours and has context on design decisions (like the P2-06
+gap above, or the QuickSight-vs-console open question) that isn't fully
+written down yet. Don't duplicate or contradict work he's mid-thought on —
+confirm what he's already planning to pick up next before claiming a
+layer.
