@@ -30,3 +30,27 @@ variable "operator_principal_arn" {
   type    = string
   default = "arn:aws:iam::337058058699:role/condor-bootstrap"
 }
+
+variable "discovery_collector_role_arn" {
+  description = <<-EOT
+    The discovery platform's collector role, granted read-only in-cluster
+    access so its `kubernetes` adapter can see what runs here.
+
+    Empty means no access entry at all: an estate that has not been asked to be
+    discovered grants nothing, and enabling it is one line and one visible plan
+    diff rather than a default somebody inherits.
+
+    The role is per engagement - dp-<engagement>-collector, created by the
+    platform's 30-collect layer - so the estate names it explicitly rather than
+    pattern-matching. A wildcard here would grant every future engagement
+    in-cluster access to this cluster.
+  EOT
+  type        = string
+  default     = ""
+
+  validation {
+    condition = (var.discovery_collector_role_arn == "" ||
+    can(regex("^arn:aws:iam::[0-9]{12}:role/.+$", var.discovery_collector_role_arn)))
+    error_message = "An IAM role ARN, or empty to grant nothing."
+  }
+}
