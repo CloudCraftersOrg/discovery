@@ -264,6 +264,30 @@ Resources:
             PAGOS_URL=http://pagos.condor.internal:8080/pay
             ENVEOF
 
+            # P1-14: /checkout every minute is what produces Tienda -> Pagos
+            # traffic. systemd timer, not cron.d - AL2023 ships no cronie.
+            cat > /etc/systemd/system/tienda-traffic.service <<'UNIT'
+            [Unit]
+            Description=condor-tienda checkout request
+
+            [Service]
+            Type=oneshot
+            ExecStart=/usr/bin/curl -s -o /dev/null "http://localhost:8080/checkout?amount=1.00"
+            UNIT
+            cat > /etc/systemd/system/tienda-traffic.timer <<'UNIT'
+            [Unit]
+            Description=Run tienda-traffic every minute
+
+            [Timer]
+            OnBootSec=2min
+            OnUnitActiveSec=1min
+
+            [Install]
+            WantedBy=timers.target
+            UNIT
+            systemctl daemon-reload
+            systemctl enable --now tienda-traffic.timer
+
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
