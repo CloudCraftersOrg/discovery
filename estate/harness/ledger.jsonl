@@ -17,3 +17,4 @@
 {"ts": "2026-09-25T03:39:44Z", "app": "tienda", "kind": "commit", "repo": "condor-tienda", "sha": "f0d2e33fd88061d2b5c04f6b5a440e2b23803cd3", "note": "round-robin index 12"}
 {"ts": "2026-09-25T11:15:44Z", "app": "pagos", "kind": "commit", "repo": "condor-pagos", "sha": "88eb9537274af7d29e8a039ff8764654323320fb", "note": "round-robin index 13"}
 {"ts": "2026-09-25T14:16:22Z", "app": "inventario", "kind": "manual_push", "repo": "condor-inventario", "sha": "761ff2e6c1f52b5ec5c02f96901fa54f0eb23a1d", "note": "dev.juan build+push :latest, force-new-deployment (PLANTED: AK-PIP-02)"}
+{"ts": "2026-09-25T16:39:34Z", "app": "reportes", "kind": "commit", "repo": "condor-reportes", "sha": "f18e981d774a67dfb33a35ae27892488e8200023", "note": "round-robin index 14"}
