@@ -147,3 +147,4 @@
 {"ts": "2026-10-29T18:05:00Z", "app": "tienda", "kind": "commit", "repo": "condor-tienda", "sha": "74b9d8c996082381850252ca4337847db818c895", "note": "round-robin index 141"}
 {"ts": "2026-10-30T00:38:01Z", "app": "pagos", "kind": "commit", "repo": "condor-pagos", "sha": "f9b8a59003de60b0e26f1ecc524a3fb5a62e9e97", "note": "round-robin index 142"}
 {"ts": "2026-10-30T09:39:22Z", "app": "reportes", "kind": "commit", "repo": "condor-reportes", "sha": "32917e52f9f4a536c489469a292a865c7b5eb6f8", "note": "round-robin index 143"}
+{"ts": "2026-10-30T17:44:52Z", "app": "tienda", "kind": "expected_deploy_fail", "repo": "condor-tienda", "sha": "19b6de8bec46bb0233e51117eed9033b49bcefa2", "note": "round-robin index 144"}
